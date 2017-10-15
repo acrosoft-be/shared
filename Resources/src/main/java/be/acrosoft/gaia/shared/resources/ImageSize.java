@@ -43,17 +43,6 @@ public enum ImageSize
    */
   public int getSize()
   {
-    if(_size==-1)
-    {
-      int largest=0;
-      for(ImageSize s:ImageSize.values())
-      {
-        if(s._size>largest)
-          largest=s._size;
-      }
-      return largest;
-    }
-    
     return _size;
   }
   

@@ -28,8 +28,11 @@ import be.acrosoft.gaia.shared.util.GaiaRuntimeException;
  *   <li>Strings : strings are fetched from a ResourceBundle. The resource bundle name is the implementing class's
  *   package name followed by ".strings.messages".</li>
  *   <li>Images : images are loaded using the implementing class's class loader. The full image path is the implementing class's
- *   package name followed by "/images" and postfixed with an extension that is chosen from within "gif","bmp","jpg","jpeg" in that order.</li>
+ *   package name followed by "/images" and postfixed with an extension that is chosen from within
+ *   "svgz","svg","gif","bmp","jpg","jpeg" in that order.</li>
  * </ul>
+ * For strings, Scripting is supported. Small javascript snippets can be used in place of raw strings in the resource
+ * bundle. Such entries must be surrounded by curly braces {}.
  */
 public abstract class AbstractResourcesProvider
 {
@@ -46,7 +49,7 @@ public abstract class AbstractResourcesProvider
   /**
    * Create a new AbstractResourcesProvider.
    */
-  public AbstractResourcesProvider()
+  protected AbstractResourcesProvider()
   {
     String cl=getClass().getPackage().getName();
     cl+=".strings.messages"; //$NON-NLS-1$
@@ -115,9 +118,9 @@ public abstract class AbstractResourcesProvider
     }
     catch(ScriptException ex)
     {
-      ex.printStackTrace();
       if(Debug.isDebug())
       {
+        ex.printStackTrace();
         throw new GaiaRuntimeException(ex);
       }
       return ex.getLocalizedMessage();
@@ -245,7 +248,10 @@ public abstract class AbstractResourcesProvider
   /**
    * Get an input stream to the localized image based on the given key. If
    * an image of that exact size cannot be found, the closest smaller
-   * matching in size will be returned.
+   * matching in size will be returned.<br/>
+   * This method will always return an image. If no images can be found
+   * matching the request key and size, then a generic "error" image will
+   * be returned instead.
    * @param key key.
    * @param preferredSize preferred size.
    * @return localized image.
@@ -283,6 +289,7 @@ public abstract class AbstractResourcesProvider
   
   /**
    * Get the scalable image (SVG file) from the given images key.
+   * This method will try .svgz before looking up for .svg.
    * @param key image key.
    * @return SVG image, or null if not found.
    */
@@ -303,7 +310,7 @@ public abstract class AbstractResourcesProvider
       }
       catch(IOException e)
       {
-        e.printStackTrace();
+        //Ignore, look up for the SVG instead.
       }
     }
     

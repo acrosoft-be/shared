@@ -1,6 +1,7 @@
 package be.acrosoft.gaia.shared.resources;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -66,6 +67,20 @@ public class AbstractResourcesProviderTest
     assertEquals("Valore",prov.getString("Category.Key"));
 
     Locale.setDefault(old);
+  }
+  
+  @Test
+  public void testError()
+  {
+    AbstractResourcesProvider prov=new AbstractResourcesProvider() {};
+    assertEquals("ReferenceError: \"bof\" is not defined in <eval> at line number 1",prov.getString("Error"));
+  }
+  
+  @Test
+  public void testEmpty()
+  {
+    AbstractResourcesProvider prov=new AbstractResourcesProvider() {};
+    assertEquals("",prov.getString("Empty"));
   }
   
   private boolean compareStreams(InputStream a,InputStream b) throws IOException
@@ -135,15 +150,13 @@ public class AbstractResourcesProviderTest
   public void testGetImage() throws IOException
   {
     AbstractResourcesProvider prov=new AbstractResourcesProvider() {};
-    InputStream a=prov.getImage("image");
-    assertEquals("png",load(a));
+    assertEquals("png",load(prov.getImage("image")));
+    assertEquals("16",load(prov.getImage("sized",16)));
   }
   
   @Test
   public void testMultiSizeImage() throws IOException
   {
-    Debug.override(true);
-
     AbstractResourcesProvider prov=new AbstractResourcesProvider() {};
     InputStream a;
     
@@ -155,8 +168,43 @@ public class AbstractResourcesProviderTest
 
     a=prov.findImage("sized",ImageSize.LARGE.getSize());
     assertEquals("32",load(a));
+  }
+  
+  @Test
+  public void testMultiSizeImageNoErrorFallback() throws IOException
+  {
+
+    AbstractResourcesProvider prov=new AbstractResourcesProvider() {};
+    InputStream a;
+    
+    a=prov.findCloseImage("sized",ImageSize.SMALL.getSize());
+    assertEquals("16",load(a));
+
+    a=prov.findCloseImage("sized",ImageSize.MEDIUM.getSize());
+    assertEquals("24",load(a));
+
+    a=prov.findCloseImage("sized",ImageSize.LARGE.getSize());
+    assertEquals("32",load(a));
        
-    Debug.override(false);
+    a=prov.findCloseImage("partialsized1",ImageSize.MEDIUM.getSize());
+    assertNull(a);
+
+    a=prov.findCloseImage("partialsized2",28);
+    assertEquals("24",load(a));
+
+    a=prov.findCloseImage("partialsized2",20);
+    assertEquals("16",load(a));
+
+    a=prov.findCloseImage("partialsized1",28);
+    assertNull(a);
+    
+  }
+  
+  @Test
+  public void testUnsizedFallback() throws IOException
+  {
+    AbstractResourcesProvider prov=new AbstractResourcesProvider() {};
+    assertEquals("png",load(prov.findImage("image",ImageSize.MEDIUM.getSize())));
   }
   
   @Test
@@ -167,13 +215,20 @@ public class AbstractResourcesProviderTest
     AbstractResourcesProvider prov=new AbstractResourcesProvider() {};
     InputStream a;
     
-    a=prov.findImage("partialsized1",ImageSize.MEDIUM.getSize());
-    assertEquals("24",load(a));
+    try
+    {
+      a=prov.findImage("partialsized1",ImageSize.MEDIUM.getSize());
+      fail("Unexpected success");
+    }
+    catch(NoSuchResourceException ex)
+    {
+      //Expected
+    }
 
     a=prov.findImage("partialsized1",ImageSize.LARGE.getSize());
     assertEquals("32",load(a));
 
-    Debug.override(false);
+    Debug.override(null);
   }
   
   @Test
@@ -186,14 +241,14 @@ public class AbstractResourcesProviderTest
     
     a=prov.findImage("partialsized2",ImageSize.SMALL.getSize());
     assertEquals("16",load(a));
-
+    
     a=prov.findImage("partialsized2",ImageSize.MEDIUM.getSize());
     assertEquals("24",load(a));
 
     a=prov.findImage("partialsized2",ImageSize.LARGE.getSize());
     assertEquals("24",load(a));
 
-    Debug.override(false);
+    Debug.override(null);
   }
   
   @Test
@@ -216,5 +271,18 @@ public class AbstractResourcesProviderTest
   {
     AbstractResourcesProvider prov=new AbstractResourcesProvider() {};
     assertEquals("8 nests",prov.getString("Nested","nests"));
+  }
+  
+  @Test
+  public void testVectorial() throws Exception
+  {
+    AbstractResourcesProvider prov=new AbstractResourcesProvider() {};
+    
+    String a=load(prov.getScalableImage("vectorial"));
+    assertEquals("vectorial",a);
+    String b=load(prov.getScalableImage("vectorial2"));
+    assertEquals("vectorial2",b);
+    String c=load(prov.getScalableImage("vectorial3"));
+    assertEquals("vectorial3",c);
   }
 }
