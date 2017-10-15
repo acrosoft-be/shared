@@ -2,9 +2,11 @@ package be.acrosoft.gaia.shared.util;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,7 +25,7 @@ public class Version implements Comparable<Version>,Serializable,Cloneable
   
   private static String readFromFile(File file) throws IOException
   {
-    try(BufferedReader br=new BufferedReader(new FileReader(file)))
+    try(BufferedReader br=new BufferedReader(new InputStreamReader(new FileInputStream(file),Charset.defaultCharset())))
     {
       return br.readLine();
     }

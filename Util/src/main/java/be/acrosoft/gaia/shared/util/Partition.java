@@ -2,9 +2,11 @@ package be.acrosoft.gaia.shared.util;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -274,14 +276,14 @@ public class Partition<T,C> implements Iterable<Partition<T,C>.Element>
       element.add(array[i]);
     }
     
-    Set<C> keySet=map.keySet();
-    _elements=new ArrayList<>(keySet.size());
+    Set<Map.Entry<C,ArrayList<T>>> entrySet=map.entrySet();
+    _elements=new ArrayList<>(entrySet.size());
     
-    for(C category:keySet)
+    for(Map.Entry<C,ArrayList<T>> category:entrySet)
     {
-      ArrayList<T> elements=map.get(category);
+      ArrayList<T> elements=category.getValue();
       T[] els=toArray(elements,array);
-      _elements.add(new Element(category,els,true,-1));
+      _elements.add(new Element(category.getKey(),els,true,-1));
     }
   }
   
@@ -291,12 +293,12 @@ public class Partition<T,C> implements Iterable<Partition<T,C>.Element>
    */
   public List<Element> getElements()
   {
-    return _elements;
+    return Collections.unmodifiableList(_elements);
   }
 
   @Override
   public Iterator<Element> iterator()
   {
-    return _elements.iterator();
+    return getElements().iterator();
   }
 }
