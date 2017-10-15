@@ -1,0 +1,61 @@
+package be.acrosoft.gaia.shared.dispatch;
+
+/**
+ * This interface provides services needed for asynchronous method invocation. There is an assumption
+ * that the invocation will take place from within a background thread.<br/>
+ * Methods are full thread-safe and can be called directly from within the background thread if
+ * needed (that is, the methods are reentrant).<br/>
+ * Invocations will take place in FIFO as much as possible. Some methods will inherently cause this
+ * FIFO property to break if called from the background thread.
+ */
+public interface AsyncInvoker
+{
+  /**
+   * Dispatch the given runnable object into the dispatch thread as soon as possible and return immediately,
+   * typically before the runnable has been executed.
+   * @param run runnable to dispatch.
+   */
+  public void dispatch(Runnable run);
+  
+  /**
+   * Execute the given runnable object into the dispatch thread as soon as possible, and return when it is done.
+   * This method is therefore blocking.<br/>
+   * Using this method from the background thread is allowed, but not advised as this will cause FIFO to be
+   * temporarily violated.
+   * @param run runnable to call.
+   */
+  public void call(Runnable run);
+  
+  /**
+   * Return whether the calling thread is the dispatch thread.
+   * @return true if the calling thread is the dispatch thread, false otherwise.
+   */
+  public boolean isDispatchThread();
+  
+  /**
+   * Do nothing but does not prevent the runnable objects from being dispatched. It is typically used to
+   * wait from within the background thread without preventing other executions.
+   * Calling this method outside of the background thread will cause the thread to yield or sleep
+   * for a little while if block is set to true.<br/>
+   * @param block if true, this method can block until the next object is dispatched.
+   * @return true if some runnable objects were actually dispatched, false otherwise.
+   */
+  public boolean yield(boolean block);
+  
+  /**
+   * Wait until all dispatched objects are executed.
+   * Using this method from the background thread is allowed, but not advised as this will cause FIFO to be
+   * temporarily violated.<br/>
+   * This method is only a "best effort" service as new objects may be dispatched for execution during its
+   * execution. Therefore this method will do reasonable effort to dispatch any pending objects, but
+   * it is not guaranteed that no objects are pending execution by the time it returns.
+   */
+  public void flush();
+  
+  /**
+   * Dispose the invoker. No further methods should be called on this object once disposed. This will
+   * typically terminate the background thread.
+   */
+  public void dispose();
+  
+}

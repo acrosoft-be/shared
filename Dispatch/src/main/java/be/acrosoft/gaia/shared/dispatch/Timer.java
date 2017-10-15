@@ -1,0 +1,79 @@
+package be.acrosoft.gaia.shared.dispatch;
+
+/**
+ * A timer proposes a mechanism for executing actions on a regular basis, using a specified internal of time between each
+ * action. The next action is performed after the specified internal in milliseconds, counting from the *beginning* of the
+ * previous action. Therefore, there is no possible global drift. Note that is the action must be executed more often than
+ * what is possible (ie, the 'next' action should occur in the past), then actions are skipped. That is, there is no
+ * possible action execution 'debt'.
+ */
+public class Timer implements Runnable
+{
+  private Runnable _runnable;
+  private long _interval;
+  private boolean _enabled;
+  private Object _reference;
+  private long _expected;
+
+  /**
+   * Create a new Timer. The timer is not enabled.
+   * @param runnable runnable to be executed at each interval when the timer is enabled.
+   * @param interval timer interval.
+   */
+  public Timer(Runnable runnable,long interval)
+  {
+    if(interval<=0) throw new IllegalArgumentException();
+    _runnable=runnable;
+    _interval=interval;
+    _enabled=false;
+    _reference=null;
+  }
+  
+  /**
+   * Enable the timer. If the timer is already enabled, this has no effect. The first action will be executed after
+   * the interval exhaustion starting at this call.
+   */
+  public void enable()
+  {
+    if(enabled()) return;
+    _expected=System.currentTimeMillis()+_interval;
+    _reference=Scheduler.getInstance().schedule(this,_expected);
+    _enabled=true;
+  }
+  
+  /**
+   * Disable the timer. If the timer is not enabled, this has no effect.
+   */
+  public void disable()
+  {
+    if(!enabled()) return;
+    _enabled=false;
+    if(_reference!=null) Scheduler.getInstance().cancel(_reference);
+    _reference=null;
+  }
+  
+  /**
+   * Check whether the timer is enabled or not.
+   * @return true if the timer is enabled, false otherwise.
+   */
+  public boolean enabled()
+  {
+    return _enabled;
+  }
+  
+  @Override
+  public void run()
+  {
+    _runnable.run();
+    if(enabled())
+    {
+      //Ignore action debt.
+      do
+      {
+        _expected+=_interval;
+      }
+      while(_expected<System.currentTimeMillis());
+      _reference=Scheduler.getInstance().schedule(this,_expected);
+    }
+  }
+}

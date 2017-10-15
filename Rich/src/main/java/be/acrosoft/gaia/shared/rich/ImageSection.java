@@ -1,0 +1,86 @@
+package be.acrosoft.gaia.shared.rich;
+
+/**
+ * ImageSection.
+ */
+public class ImageSection extends Section
+{
+  private byte[] _data;
+  private double _width;
+  private double _height;
+  
+  /**
+   * Create a new ImageSection.
+   */
+  public ImageSection()
+  {
+    this(null);
+  }
+  
+  /**
+   * Create a new ImageSection.
+   * @param data image data.
+   */
+  public ImageSection(byte[] data)
+  {
+    _data=data;
+    _width=-1;
+    _height=-1;
+  }
+  
+  
+  /**
+   * Set the image data.
+   * @param data image data.
+   */
+  public void setData(byte[] data)
+  {
+    _data=data;
+  }
+  
+  /**
+   * Get image data.
+   * @return image data.
+   */
+  public byte[] getData()
+  {
+    return _data;
+  }
+
+  /**
+   * Set the width.
+   * @param width The width to set.
+   */
+  public void setWidth(double width)
+  {
+    _width=width;
+  }
+
+  /**
+   * Get the width.
+   * @return Returns the width.
+   */
+  public double getWidth()
+  {
+    return _width;
+  }
+
+  /**
+   * Set the height.
+   * @param height The height to set.
+   */
+  public void setHeight(double height)
+  {
+    _height=height;
+  }
+
+  /**
+   * Get the height.
+   * @return Returns the height.
+   */
+  public double getHeight()
+  {
+    return _height;
+  }
+  
+}
