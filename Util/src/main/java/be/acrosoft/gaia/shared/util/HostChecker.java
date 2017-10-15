@@ -104,8 +104,6 @@ public class HostChecker
         catch(NumberFormatException ex)
         {
           //Invalid host, ignore this entry
-          System.err.println("Invalid host "+host); //$NON-NLS-1$
-          ex.printStackTrace();
           continue;
         }
       }
@@ -134,8 +132,6 @@ public class HostChecker
       catch(UnknownHostException ex)
       {
         //Invalid host, ignore this entry
-        System.err.println("Invalid host "+host); //$NON-NLS-1$
-        ex.printStackTrace();
         continue;
       }
     }

@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import be.acrosoft.gaia.shared.util.GaiaRuntimeException.RootCause;
-
 /**
  * The Bus implements the asynchronous Query/Answer paradigm. FIFO is not guaranteed.
  * All methods of the Bus class are multi-thread safe.
@@ -112,13 +110,13 @@ public class Bus
    * @param timeout maximum amount to wait for the response if it is not available
    * yet. If timeout is equal to 0, infinite wait is done. If timeout is negative,
    * no wait is done (ie, non-blocking operation).
-   * @return <true,response> if the response has been received within the specified
-   * timeout, <false,null> if the response is not available yet and the timeout
+   * @return the response object if the response has been received within the specified
+   * timeout, null if the response is not available yet and the timeout
    * expired. Note that is a response is actually returned by this method, the
    * token is invalidated and cannot be used anymore.
    * @throws InterruptedException if the wait gets interrupted.
    */
-  public Pair<Boolean,Object> getResponse(Token token,long timeout) throws InterruptedException
+  public Object getResponse(Token token,long timeout) throws InterruptedException
   {
     synchronized(_lock)
     {
@@ -142,7 +140,7 @@ public class Bus
       }
       
       _items.remove(token);
-      return new Pair<Boolean,Object>(true,item.response);
+      return item.response;
     }
   }
   
@@ -199,136 +197,5 @@ public class Bus
     }
     if(item.callBack!=null)
       item.callBack.run();
-  }
-    
-  
-    /////////////////////////
-   // TEST TEST TEST TEST //
-  /////////////////////////
-  
-  
-  private static class ServerRunnable implements Runnable
-  {
-    private Bus _bus;
-    private int _count;
-    
-    /**
-     * Create a new ServerRunnable.
-     * @param bus
-     */
-    public ServerRunnable(Bus bus)
-    {
-      _bus=bus;
-      _count=0;
-    }
-    
-    @Override
-    public void run()
-    {
-      while(true)
-      {
-        try
-        {
-          Pair<Token,Object> request=_bus.getRequest(0);
-          int v=(Integer)request.b;
-          Token token=request.a;
-          _bus.sendResponse(token,2*v);
-          _count++;
-        }
-        catch(InterruptedException ex)
-        {
-          throw new GaiaRuntimeException(ex);
-        }
-      }
-    }
-    
-    /**
-     * .
-     * @return count.
-     */
-    public int report()
-    {
-      System.out.println(this+" handled "+_count+" requests"); //$NON-NLS-1$ //$NON-NLS-2$
-      return _count;
-    }
-  }
-  
-  private static class ClientRunnable implements Runnable
-  {
-    private Bus _bus;
-    
-    /**
-     * Create a new ServerRunnable.
-     * @param bus
-     */
-    public ClientRunnable(Bus bus)
-    {
-      _bus=bus;
-    }
-
-    @Override
-    public void run()
-    {
-      try
-      {
-        for(int i=0;i<1000;i++)
-        {
-          Token token=_bus.sendRequest(i);
-          Pair<Boolean,Object> response=_bus.getResponse(token,0);
-          if(!response.a) throw new GaiaRuntimeException(RootCause.INTERNAL_ERROR);
-          int v=(Integer)response.b;
-          if(v!=i*2) throw new GaiaRuntimeException(RootCause.INTERNAL_ERROR);
-        }
-      }
-      catch(InterruptedException ex)
-      {
-        throw new GaiaRuntimeException(ex);
-      }
-    }
-  }
-
-  /**
-   * Test.
-   * @param args
-   */
-  public static void main(String[] args)
-  {
-    final Bus bus=new Bus();
-
-    ServerRunnable[] serversRunnable=new ServerRunnable[20];
-    Thread[] servers=new Thread[serversRunnable.length];
-    for(int i=0;i<servers.length;i++)
-    {
-      serversRunnable[i]=new ServerRunnable(bus);
-      servers[i]=new Thread(serversRunnable[i]);
-      servers[i].setDaemon(true);
-      servers[i].start();
-    }
-    
-    Thread[] clients=new Thread[20];
-    for(int i=0;i<clients.length;i++)
-    {
-      clients[i]=new Thread(new ClientRunnable(bus));
-      clients[i].start();
-    }
-    
-    for(int i=0;i<clients.length;i++)
-    {
-      try
-      {
-        clients[i].join();
-      }
-      catch(InterruptedException ex)
-      {
-        throw new GaiaRuntimeException(ex);
-      }
-    }
-    
-    int total=0;
-    for(int i=0;i<serversRunnable.length;i++)
-    {
-      total+=serversRunnable[i].report();
-    }
-    System.out.println("total = "+total); //$NON-NLS-1$
   }
 }

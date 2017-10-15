@@ -4,11 +4,8 @@ import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
-
-import be.acrosoft.gaia.shared.util.Pair;
 
 /**
  * Very efficient FIFO cyclic buffer based on ByteBuffer implementation.
@@ -197,17 +194,6 @@ public class FIFOBuffer
    */
   public void write(byte[] array,int offset,int size)
   {
-    if(_size==0)
-    {
-      _size=size;
-      _offset=offset;
-      //Do not works if the given array is invalided...(case of array which is re-use)
-      _buffer=ByteBuffer.wrap(array,offset,size);
-//      _buffer=ByteBuffer.allocate(array.length);
-      _buffer.put(array,offset,size);
-      return;
-    }
-    
     adaptSize(_size+size);
     
     int first=(_offset+_size)%_buffer.capacity();
@@ -252,7 +238,7 @@ public class FIFOBuffer
    */
   public void writeByte(byte aByte)
   {
-	_tmp.clear();
+    _tmp.clear();
     _tmp.put(aByte);
     _tmp.flip(); 
     write(_tmp.array(), 0, 1);
@@ -264,7 +250,7 @@ public class FIFOBuffer
    */
   public void writeChar(char aChar)
   {
-	_tmp.clear();
+    _tmp.clear();
     _tmp.putChar(aChar);
     _tmp.flip(); 
     write(_tmp.array(), 0, 2);
@@ -286,10 +272,10 @@ public class FIFOBuffer
    * a BufferOverflowException is thrown and the buffer is left unchanged.
    * @param aFloat a float.
    */
-  public void writeFloat(int aFloat)
+  public void writeFloat(float aFloat)
   {
 	_tmp.clear();
-    _tmp.putInt(aFloat);
+    _tmp.putFloat(aFloat);
     _tmp.flip(); 
     write(_tmp.array(), 0, 4);
   }
@@ -641,117 +627,5 @@ public class FIFOBuffer
     String ans=super.toString();
     return ans+" [size = "+getSize()+" capacity = "+getCapacity()+" free space = "+getFreeSpace()+"]";
   }
-  
-    //////////////////////////////
-   //      TEST TEST TEST      //
-  //////////////////////////////
-  
-  private static class TestChannel implements ByteChannel
-  {
-    private byte _nextRead;
-    private byte _nextWrite;
-    
-    /**
-     * Create a new TestChannel.
-     */
-    public TestChannel()
-    {
-      _nextRead=1;
-      _nextWrite=1;
-    }
-    
-    @Override
-    public int read(ByteBuffer dst) throws IOException
-    {
-      int actualCount=0;
-      int rem=dst.remaining();
-      for(int i=0;i<rem;i++)
-      {
-        dst.put(_nextRead++);
-        actualCount++;
-        if(_nextRead==6)
-        {
-          _nextRead=1;
-          break;
-        }
-      }
-      return actualCount;
-    }
 
-    @Override
-    public void close() throws IOException
-    {
-    }
-
-    @Override
-    public boolean isOpen()
-    {
-      return true;
-    }
-
-    @Override
-    public int write(ByteBuffer src) throws IOException
-    {
-      int actualCount=0;
-      int rem=src.remaining();
-      for(int i=0;i<rem;i++)
-      {
-        byte b=src.get();
-        actualCount++;
-        if(b!=_nextWrite)
-          throw new RuntimeException();
-        _nextWrite++;
-        if(_nextWrite==6)
-        {
-          _nextWrite=1;
-          break;
-        }
-      }
-      return actualCount;
-    }
-  }
-  
-  /**
-   * @param args
-   * @throws IOException
-   */
-  public static void main(String[] args) throws IOException
-  {
-    FIFOBuffer buffer=new FIFOBuffer(8);
-    
-    for(int i=0;i<1000;i++)
-    {
-      buffer.write(new byte[] {1});
-      buffer.write(new byte[] {2});
-      buffer.write(new byte[] {3,4,5});
-  
-      byte[] b=new byte[5];
-      buffer.read(b);
-      for(int z=0;z<b.length;z++)
-      {
-        if(z!=b[z]-1) throw new RuntimeException();
-      }
-    }
-    
-    TestChannel ch=new TestChannel();
-    for(int i=0;i<1000;i++)
-    {
-      buffer.write(ch);
-      buffer.read(ch);
-    }
-    
-    buffer.write(new byte[] {1,2,3,4,5,6,7,8});
-    int v;
-    long l;
-    
-    v=buffer.peekInt(0);
-    if(v!=0x01020304) throw new RuntimeException(""+v); //$NON-NLS-1$
-    v=buffer.peekInt(4);
-    if(v!=0x05060708) throw new RuntimeException(""+v); //$NON-NLS-1$
-    
-    l=buffer.peekLong(0);
-    if(l!=0x0102030405060708l) throw new RuntimeException(""+l); //$NON-NLS-1$
-    
-    
-  }
 }

@@ -1,6 +1,8 @@
 package be.acrosoft.gaia.shared.util;
 
+import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
 /**
@@ -17,12 +19,16 @@ public class Cache<K>
      * Create a new CacheItem.
      * @param exp expiration.
      * @param v value.
+     * @param weak use weak instead of soft reference.
      */
-    public CacheItem(long exp,Object v)
+    public CacheItem(long exp,Object v,boolean weak)
     {
       added=System.currentTimeMillis();
       expiration=exp;
-      value=new SoftReference<Object>(v);
+      if(weak)
+        value=new WeakReference<Object>(v);
+      else
+        value=new SoftReference<Object>(v);
     }
 
     /**
@@ -36,13 +42,17 @@ public class Cache<K>
     /**
      * Value.
      */
-    public SoftReference<Object> value;
+    public Reference<Object> value;
   }
   
   /**
    * User-provided null values will be stored as NULL.
    */
   private HashMap<K,CacheItem> _map;
+  /**
+   * Whether to use soft or weak references for the values.
+   */
+  private boolean _weak;
   
   /**
    * Because values can be null, we need a safe way to
@@ -58,11 +68,21 @@ public class Cache<K>
   public static final Object NOT_PRESENT=new Object();
   
   /**
-   * Create a new Cache.
+   * Create a new Cache using SoftReference.
    */
   public Cache()
   {
+    this(false);
+  }
+  
+  /**
+   * Create a new Cache.
+   * @param weak true if weak references should be used, false otherwise.
+   */
+  public Cache(boolean weak)
+  {
     _map=new HashMap<K,CacheItem>();
+    _weak=weak;
   }
     
   /**
@@ -102,7 +122,7 @@ public class Cache<K>
     if(value==NOT_PRESENT) throw new IllegalArgumentException(value.toString());
     synchronized(_map)
     {
-      _map.put(key,new CacheItem(expiration,value));
+      _map.put(key,new CacheItem(expiration,value,_weak));
     }
   }
   
@@ -206,7 +226,7 @@ public class Cache<K>
         }
         el.inject(v).into(ans);
       }
-      else if(cat.equals(Boolean.FALSE))
+      else
       {
         fromStorageKeys=k;
         fromStorageValues=storage.read(k);
@@ -214,14 +234,15 @@ public class Cache<K>
       }
     }
 
-    if(fromStorageKeys!=null&&fromStorageValues!=null)
+    if(fromStorageKeys!=null)
     {
+      assert fromStorageValues!=null;
       synchronized(_map)
       {
         for(int i=0;i<fromStorageKeys.length;i++)
         {
           if(storage.cachable(fromStorageKeys[i]))
-            _map.put(fromStorageKeys[i],new CacheItem(storage.getExpiration(fromStorageKeys[i]),fromStorageValues[i]));
+            _map.put(fromStorageKeys[i],new CacheItem(storage.getExpiration(fromStorageKeys[i]),fromStorageValues[i],_weak));
         }
       }
     }
@@ -260,56 +281,10 @@ public class Cache<K>
         for(int i=0;i<keys.length;i++)
         {
           if(storage.cachable(keys[i]))
-            _map.put(keys[i],new CacheItem(storage.getExpiration(keys[i]),values[i]));
+            _map.put(keys[i],new CacheItem(storage.getExpiration(keys[i]),values[i]==null?NULL:values[i],_weak));
         }
       }
     }
   }
   
-  /**
-   * @param args
-   */
-  public static void main(String[] args)
-  {
-    Cache<Integer> c=new Cache<Integer>();
-    
-    Storage<Integer> s=new Storage<Integer>() {
-
-      @Override
-      public Object[] read(Integer[] key)
-      {
-        Object[] ans=new Object[key.length];
-        for(int i=0;i<ans.length;i++)
-        {
-          System.out.println("reading "+key[i]); //$NON-NLS-1$
-          ans[i]=key[i];
-        }
-        return ans;
-      }
-
-      @Override
-      public void write(Integer[] key,Object[] value)
-      {
-        for(int i=0;i<key.length;i++)
-          System.out.println("writing "+key[i]); //$NON-NLS-1$
-      }
-
-      @Override
-      public boolean cachable(Integer key)
-      {
-        return true;
-      }
-
-      @Override
-      public long getExpiration(Integer key)
-      {
-        return -1;
-      }};
-    
-    c.write(new Integer[] {1,2,3,4},new Object[] {1,2,3,4},s);
-    c.read(new Integer[] {1,2,3,4},s);
-    //c.read(new Integer[] {1,2,3,4},s);
-    //c.read(new Integer[] {1,2,3,4},s);
-      
-  }
 }

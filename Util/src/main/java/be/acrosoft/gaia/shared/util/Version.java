@@ -23,14 +23,9 @@ public class Version implements Comparable<Version>,Serializable,Cloneable
   
   private static String readFromFile(File file) throws IOException
   {
-    BufferedReader br=new BufferedReader(new FileReader(file));
-    try
+    try(BufferedReader br=new BufferedReader(new FileReader(file)))
     {
       return br.readLine();
-    }
-    finally
-    {
-      br.close();
     }
   }
   
