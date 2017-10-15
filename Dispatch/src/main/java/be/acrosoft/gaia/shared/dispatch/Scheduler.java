@@ -13,7 +13,7 @@ import java.util.TreeMap;
 public class Scheduler
 {
 
-  private class ScheduledItemInternal implements Runnable
+  private static class ScheduledItemInternal implements Runnable
   {
     /**
      * Runnable to run.
@@ -48,7 +48,7 @@ public class Scheduler
     }
   }
   
-  private class ScheduledItem
+  private static class ScheduledItem
   {
     /**
      * Internal.

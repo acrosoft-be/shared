@@ -395,6 +395,8 @@ public interface Listener<T extends Listener>
         if(_aliases==null) return;
         List<WeakReference<T>> list=_aliases.get(key);
         if(list==null) return;
+        //No matter what findbugs believe, we really need to create a temporary ArrayList to avoid re-entry issues
+        //during the iteration...
         new ArrayList<WeakReference<T>>(list).forEach(wl->remove(wl.get()));
       }
     }
