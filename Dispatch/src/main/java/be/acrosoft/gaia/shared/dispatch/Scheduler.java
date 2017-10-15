@@ -65,7 +65,7 @@ public class Scheduler
     }
   }
   
-  private class SchedulerThread extends Thread
+  private static class SchedulerThread extends Thread
   {
     private TreeMap<Long,List<ScheduledItemInternal>> _items;
     private boolean _waiting;
