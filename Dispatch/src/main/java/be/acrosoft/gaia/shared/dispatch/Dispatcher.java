@@ -1,8 +1,5 @@
 package be.acrosoft.gaia.shared.dispatch;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 import be.acrosoft.gaia.shared.util.GaiaRuntimeException;
 
 /**
@@ -73,42 +70,6 @@ public class Dispatcher
   {
     if(!isInitialized()) throw new GaiaRuntimeException(GaiaRuntimeException.RootCause.INTERNAL_ERROR);
     getInvoker().call(run);
-  }
-  
-  private static void invoke(Object target,Method method,Object[] args)
-  {
-    try
-    {
-      method.invoke(target,args);
-    }
-    catch(IllegalAccessException|IllegalArgumentException|InvocationTargetException ex)
-    {
-      reportException(ex);
-    }
-  }
-  
-  /**
-   * Dispatch the given method on the given target with the given arguments into the dispatch thread as soon
-   * as possible and return immediately.
-   * @param target target object.
-   * @param method method to call.
-   * @param args method arguments.
-   */
-  public static void dispatch(Object target,Method method,Object[] args)
-  {
-    dispatch(()->invoke(target,method,args));
-  }
-
-  /**
-   * Execute the given method on the given target with the given arguments into the dispatch thread as soon
-   * as possible, and return when it is done.
-   * @param target target object.
-   * @param method method to call.
-   * @param args method arguments.
-   */
-  public static void call(Object target,Method method,Object[] args)
-  {
-    call(()->invoke(target,method,args));
   }
   
   /**
