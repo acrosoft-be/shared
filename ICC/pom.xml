@@ -14,8 +14,8 @@
 			<url>http://maven-eclipse.github.io/maven</url>
 		</repository>
 		<repository>
-			<id>ExtLibs</id>
-			<url>file://${project.basedir}/../../Dev/ExtLibs</url>
+			<id>acrosoft</id>
+			<url>http://www.acrosoft.be/maven</url>
 		</repository>
 	</repositories>
 	<dependencies>
