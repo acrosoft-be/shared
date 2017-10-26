@@ -4,7 +4,7 @@
 	<groupId>be.acrosoft.gaia</groupId>
 	<artifactId>shared.icc</artifactId>
 	<version>1.0</version>
-	<name>Shared.Rich</name>
+	<name>Shared.ICC</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
