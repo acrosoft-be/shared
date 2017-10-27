@@ -37,7 +37,7 @@ public class IDCardReaderTest
       return;
     }
     CardReaderMonitor monitor=reader.getMonitor();
-    monitor.addIDCardReaderMonitorListener(new CardReaderMonitorListener()
+    monitor.getEventDelegate().add(new CardReaderMonitorListener()
     {
 
       @Override

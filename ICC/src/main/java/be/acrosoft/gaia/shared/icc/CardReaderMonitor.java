@@ -13,14 +13,8 @@ public interface CardReaderMonitor
   public CardReader getMonitoredReader();
   
   /**
-   * Add a monitoring listener.
-   * @param listener listener to add.
+   * Get the event delegate for event registration.
+   * @return event delegate.
    */
-  public void addIDCardReaderMonitorListener(CardReaderMonitorListener listener);
-  
-  /**
-   * Remove a monitoring listener.
-   * @param listener listener to remove.
-   */
-  public void removeIDCardReaderMonitorListener(CardReaderMonitorListener listener);
+  public CardReaderMonitorListener getEventDelegate(); 
 }

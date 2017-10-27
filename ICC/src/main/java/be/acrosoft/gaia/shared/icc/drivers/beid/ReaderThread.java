@@ -420,17 +420,11 @@ public class ReaderThread extends Thread implements CardReaderMonitor
   }
   
   @Override
-  public void addIDCardReaderMonitorListener(CardReaderMonitorListener listener)
+  public CardReaderMonitorListener getEventDelegate()
   {
-    _listeners.add(listener);
+    return _listeners;
   }
   
-  @Override
-  public void removeIDCardReaderMonitorListener(CardReaderMonitorListener listener)
-  {
-    _listeners.remove(listener);
-  }
-
   /**
    * Dispose the thread.
    */
