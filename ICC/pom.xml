@@ -15,7 +15,7 @@
 		</repository>
 		<repository>
 			<id>acrosoft</id>
-			<url>http://www.acrosoft.be/maven</url>
+			<url>https://www.acrosoft.be/maven</url>
 		</repository>
 	</repositories>
 	<dependencies>
