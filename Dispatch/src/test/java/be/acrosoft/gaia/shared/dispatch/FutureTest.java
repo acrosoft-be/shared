@@ -151,4 +151,50 @@ public class FutureTest
     assertTrue(t.isAlive());
     t.join();
   }
+  
+  private void sleep(int delay)
+  {
+    try
+    {
+      Thread.sleep(delay);
+    }
+    catch(InterruptedException ex)
+    {
+      fail(ex.getMessage());
+    }
+  }
+  
+  @Test
+  public void testBackgroundTimeout() throws Exception
+  {
+    AsyncInvoker invoker=new SimpleAsyncInvoker();
+    try
+    {
+      Dispatcher.init(invoker);
+      Future<Integer,IOException> future=new Future<Integer,IOException>();
+      new Thread(()->{sleep(500);future.setResult(17);}).start();
+      assertNull(future.getResult(100));
+    }
+    finally
+    {
+      invoker.dispose();
+    }
+  }
+  
+  @Test
+  public void testSimpleEXception() throws Exception
+  {
+    RuntimeException t=new RuntimeException();
+    Future<Void,Exception> f=new Future<>();
+    f.setRuntimeException(t);
+    try
+    {
+      f.getResult();
+      fail("Unexpected success");
+    }
+    catch(RuntimeException ex)
+    {
+      assertEquals(t,ex);
+    }
+  }
 }

@@ -17,6 +17,7 @@ package be.acrosoft.gaia.shared.dispatch;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import be.acrosoft.gaia.shared.util.GaiaRuntimeException;
 
@@ -57,13 +58,16 @@ public class SimpleAsyncInvoker implements AsyncInvoker
   {
     private List<InvokeItem> _list=new LinkedList<InvokeItem>();
     private boolean _terminated=false;
+    private Consumer<Throwable> _errorConsumer;
     
     /**
      * Create a new InvokeThread.
+     * @param errorConsumer the error consumer where all unexpected errors are sent to.
      */
-    public InvokeThread()
+    public InvokeThread(Consumer<Throwable> errorConsumer)
     {
       super("Simple invoker thread"); //$NON-NLS-1$
+      _errorConsumer=errorConsumer;
     }
 
     /**
@@ -138,25 +142,29 @@ public class SimpleAsyncInvoker implements AsyncInvoker
         catch(InterruptedException ex)
         {
           //Not quite sure it is a good idea to let this thread die here...
-          ex.printStackTrace();
+          _errorConsumer.accept(ex);
         }
       }
+      if(item==null) return false;
       try
       {
-        if(item==null) return false;
         item.runnable.run();
         synchronized(item.lock)
         {
           item.done=true;
           item.lock.notifyAll();
         }
-        return true;
       }
       catch(Throwable ex)
       {
-        ex.printStackTrace();
-        return true;
+        synchronized(item.lock)
+        {
+          _errorConsumer.accept(ex);
+          item.done=true;
+          item.lock.notifyAll();
+        }
       }
+      return true;
     }
     
     @Override
@@ -171,11 +179,22 @@ public class SimpleAsyncInvoker implements AsyncInvoker
   }
   
   /**
-   * Create a new SimpleAsyncInvoker.
+   * Create a new SimpleAsyncInvoker. Exceptions thrown from a runnable will be ignored and simply
+   * dumped on the console.
    */
   public SimpleAsyncInvoker()
   {
-    _thread=new InvokeThread();
+    this(t->t.printStackTrace());
+  }
+  
+  /**
+   * Create a new SimpleAsyncInvoker using the given error consumer. Any exception thrown from a runnable
+   * will be reported to this consumer from within the invoker thread.
+   * @param errorConsumer error consumer.
+   */
+  public SimpleAsyncInvoker(Consumer<Throwable> errorConsumer)
+  {
+    _thread=new InvokeThread(errorConsumer);
     _thread.start();
   }
 

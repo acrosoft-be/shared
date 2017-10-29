@@ -126,7 +126,7 @@ class QueuedEventItem<K extends Listener> implements Runnable
     {
       if(ex.getTargetException() instanceof RuntimeException) throw (RuntimeException)ex.getTargetException();
       if(ex.getTargetException() instanceof Error) throw (Error)ex.getTargetException();
-      throw new GaiaRuntimeException(ex);
+      throw new GaiaRuntimeException(ex.getTargetException());
     }
     catch(Exception ex)
     {
