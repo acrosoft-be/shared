@@ -40,7 +40,7 @@ public class ProcessToolTest
   private String getName()
   {
     if(Platform.isWindows()) return "textgen.cmd";
-    return "textgen.sh";
+    return "./textgen.sh";
   }
   
   @Before
