@@ -73,7 +73,7 @@ public class ProcessToolTest
   @Test
   public void testOutput() throws IOException
   {
-    ProcessResult result=ProcessTool.execute(getName()+" 17 10000 TextTextTextTextTextTextTextTextTextText 0");
+    ProcessResult result=ProcessTool.execute(getName(),"17","10000","TextTextTextTextTextTextTextTextTextText","0");
     assertEquals(17,result.result);
     assertEquals(10002,result.output.size());
     assertEquals(10000,result.error.size());
@@ -84,7 +84,7 @@ public class ProcessToolTest
   @Test
   public void testKilled() throws Exception
   {
-    Process process=Runtime.getRuntime().exec(getName()+" 17 10 Text 3");
+    Process process=Runtime.getRuntime().exec(new String[] {getName(),"17","10","Text","3"});
     PipeReader[] readers=ProcessTool.getReaders(process);
     Thread.sleep(1000);
     process.destroyForcibly();

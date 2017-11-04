@@ -83,7 +83,7 @@ public class CronTaskScheduler extends AbstractTaskScheduler
   {
     try
     {
-      ProcessResult res=ProcessTool.execute("crontab -l"); //$NON-NLS-1$
+      ProcessResult res=ProcessTool.execute("crontab","-l"); //$NON-NLS-1$ //$NON-NLS-2$
       if(res.result==0)
       {
         ans.addAll(res.output);
@@ -125,11 +125,11 @@ public class CronTaskScheduler extends AbstractTaskScheduler
     try
     {
       backupTab();
-      File tmp=File.createTempFile("backrest","tmp"); //$NON-NLS-1$ //$NON-NLS-2$
+      File tmp=File.createTempFile("acrosoft","tmp"); //$NON-NLS-1$ //$NON-NLS-2$
       try
       {
         writeTab(tab,tmp);
-        ProcessResult res=ProcessTool.execute("crontab "+tmp.getAbsolutePath()); //$NON-NLS-1$
+        ProcessResult res=ProcessTool.execute("crontab",tmp.getAbsolutePath()); //$NON-NLS-1$
         if(res.result==0)
         {
           return null;
@@ -247,7 +247,7 @@ public class CronTaskScheduler extends AbstractTaskScheduler
           continue;
         }
       }
-      if(line.startsWith("#") && line.contains("Acrosoft") && line.contains("backrest") && line.contains(name)) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      if(line.startsWith("#") && line.contains("Acrosoft") && line.contains(name)) //$NON-NLS-1$ //$NON-NLS-2$
       {
         continue;
       }

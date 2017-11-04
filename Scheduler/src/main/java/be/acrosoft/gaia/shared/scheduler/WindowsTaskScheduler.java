@@ -167,7 +167,7 @@ public class WindowsTaskScheduler extends AbstractTaskScheduler
     
     try
     {
-      ProcessResult res=ProcessTool.execute(bld.toString());
+      ProcessResult res=ProcessTool.execute(bld.toString().split(" ")); //$NON-NLS-1$
       if(res.result!=0)
       {
         return toString(res);
@@ -190,7 +190,7 @@ public class WindowsTaskScheduler extends AbstractTaskScheduler
     }
     try
     {
-      ProcessResult res=ProcessTool.execute("schtasks /delete /TN \""+name+"\" /F"); //$NON-NLS-1$ //$NON-NLS-2$
+      ProcessResult res=ProcessTool.execute("schtasks","/delete","/TN","\""+name+"\"","/F"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
       if(res.result==0 || res.result==1)
       {
         return null;
@@ -248,7 +248,7 @@ public class WindowsTaskScheduler extends AbstractTaskScheduler
     
     try
     {
-      ProcessResult res=ProcessTool.execute("schtasks /query /FO csv /V"); //$NON-NLS-1$
+      ProcessResult res=ProcessTool.execute("schtasks","/query","/FO","csv","/V"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
       if(res.result==0)
       {
         for(String line:res.output)
@@ -317,7 +317,7 @@ public class WindowsTaskScheduler extends AbstractTaskScheduler
         _lastCheck=now;
         try
         {
-          ProcessResult res=ProcessTool.execute("sc query Schedule"); //$NON-NLS-1$
+          ProcessResult res=ProcessTool.execute("sc","query","Schedule"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
           if(res.result!=0)
           {
             _unavailable=Messages.getString("WindowsTaskScheduler.StatusError",toString(res)); //$NON-NLS-1$

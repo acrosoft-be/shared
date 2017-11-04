@@ -144,26 +144,14 @@ public class ProcessTool
   
   /**
    * Execute the given process synchronously.
-   * @param command command to execute.
+   * @param cmdArray command to execute and its parameters.
    * @return process result.
    * @throws IOException in case of problems.
    */
-  public static ProcessResult execute(String command) throws IOException
-  {
-    return execute(command,null);
-  }
-  
-  /**
-   * Execute the given process synchronously.
-   * @param command command to execute.
-   * @param envp environment variables.
-   * @return process result.
-   * @throws IOException in case of problems.
-   */
-  public static ProcessResult execute(String command,String[] envp) throws IOException
+  public static ProcessResult execute(String... cmdArray) throws IOException
   {
     ProcessResult ans=new ProcessResult();
-    Process process=Runtime.getRuntime().exec(command,envp);
+    Process process=Runtime.getRuntime().exec(cmdArray);
     PipeReader[] readers=getReaders(process);
     try
     {
