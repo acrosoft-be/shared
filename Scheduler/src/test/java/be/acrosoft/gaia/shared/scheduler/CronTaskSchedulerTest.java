@@ -359,8 +359,8 @@ public class CronTaskSchedulerTest
     File unrelated=new File(folder,"unrelated");
     assertTrue(unrelated.createNewFile());
 
-    unrelated.setLastModified(1L);
-    save.setLastModified(1L);
+    assertTrue(unrelated.setLastModified(System.currentTimeMillis()-1L*40*24*60*60*1000));
+    assertTrue(save.setLastModified(System.currentTimeMillis()-1L*40*24*60*60*1000));
     tab.cleanup();
     assertFalse(save.isFile());
     assertTrue(save1.isFile());
