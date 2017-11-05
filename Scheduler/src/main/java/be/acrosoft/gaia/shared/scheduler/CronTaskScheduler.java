@@ -16,9 +16,11 @@
 package be.acrosoft.gaia.shared.scheduler;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,32 +42,37 @@ public class CronTaskScheduler extends AbstractTaskScheduler
     public String apply(List<String> tab);
   }
   
-  private static class ProcessCronTab implements CronTab
+  static abstract class AbstractFileCronTab implements CronTab
   {
     @Override
     public void cleanup()
     {
       File back=new File("crontab.saved"); //$NON-NLS-1$
-      back.mkdirs();
+      if(!back.mkdirs())
+      {
+        if(!back.isDirectory()) return;
+      }
       long now=System.currentTimeMillis();
       File[] files=back.listFiles();
+      if(files==null) return;
       for(File file:files)
       {
         if(file.getName().startsWith("crontab.save")) //$NON-NLS-1$
         {
           long lastModified=file.lastModified();
-          if(now-lastModified>1L*30*24*60*60*1000)  //30 days
+          if(lastModified>0 && now-lastModified>1L*30*24*60*60*1000)  //30 days
           {
-            file.delete();
+            if(!file.delete())
+              file.deleteOnExit();
           }
         }
       }
     }
     
-    private void writeTab(List<String> tab,File file) throws IOException
+    protected void writeTab(List<String> tab,File file) throws IOException
     {
-      Writer wr=new FileWriter(file);
-      try
+      //Use default charset on purpose
+      try(Writer wr=new OutputStreamWriter(new FileOutputStream(file),Charset.defaultCharset()))
       {
         for(String line:tab)
         {
@@ -74,12 +81,35 @@ public class CronTaskScheduler extends AbstractTaskScheduler
         }
         wr.flush();
       }
-      finally
+    }
+    
+    protected void backupTab() throws IOException
+    {
+      File back=new File("crontab.saved"); //$NON-NLS-1$
+      if(!back.isDirectory()) return;
+      File file=new File(back,"crontab.save"); //$NON-NLS-1$
+      int i=0;
+      while(file.exists())
       {
-        wr.close();
+        i++;
+        file=new File(back,"crontab.save."+i); //$NON-NLS-1$
+      }
+      List<String> tab=new ArrayList<String>();
+      String readResult=read(tab);
+      if(readResult==null)
+      {
+        writeTab(tab,file);
+      }
+      else
+      {
+        System.err.println(readResult);
       }
     }
     
+  }
+  
+  private static class ProcessCronTab extends AbstractFileCronTab
+  {
     @Override
     public String read(List<String> ans)
     {
@@ -98,7 +128,7 @@ public class CronTaskScheduler extends AbstractTaskScheduler
         }
         else
         {
-          return res.error.toString();
+          return AbstractTaskScheduler.toString(res);
         }
       }
       catch(IOException ex)
@@ -107,21 +137,6 @@ public class CronTaskScheduler extends AbstractTaskScheduler
       }
     }
     
-    private void backupTab() throws IOException
-    {
-      File back=new File("crontab.saved"); //$NON-NLS-1$
-      File file=new File(back,"crontab.save"); //$NON-NLS-1$
-      int i=0;
-      while(file.exists())
-      {
-        i++;
-        file=new File(back,"crontab.save."+i); //$NON-NLS-1$
-      }
-      List<String> tab=new ArrayList<String>();
-      read(tab);
-      writeTab(tab,file);
-    }
-
     @Override
     public String apply(List<String> tab)
     {
@@ -141,7 +156,8 @@ public class CronTaskScheduler extends AbstractTaskScheduler
         }
         finally
         {
-          tmp.delete();
+          if(!tmp.delete())
+            tmp.deleteOnExit();
         }
       }
       catch(IOException ex)
@@ -187,7 +203,9 @@ public class CronTaskScheduler extends AbstractTaskScheduler
     if(pos<0)
     {
       if(name.length()==0)
+      {
         return null;
+      }
       return name;
     }
     if(pos==0)
@@ -282,18 +300,18 @@ public class CronTaskScheduler extends AbstractTaskScheduler
         int min=start%60;
         
         int current=start;
-        String hours=""; //$NON-NLS-1$
+        StringBuilder hours=new StringBuilder();
         while(current<=stop)
         {
           if(hours.length()>0)
           {
-            hours+=","; //$NON-NLS-1$
+            hours.append(","); //$NON-NLS-1$
           }
-          hours+=(current/60);
+          hours.append(current/60);
           current+=interval*60;
         }
         
-        toAdd=String.format("%1$s %2$s * * * %3$s",min,hours,command); //$NON-NLS-1$
+        toAdd=String.format("%1$s %2$s * * * %3$s",min,hours.toString(),command); //$NON-NLS-1$
         break;
       }
     }

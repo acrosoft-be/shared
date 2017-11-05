@@ -115,6 +115,8 @@ public class WindowsTaskScheduler extends AbstractTaskScheduler
           case 6:
             day="SUN"; //$NON-NLS-1$
             break;
+          default:
+            break;
         }
         
         if(version<=5)

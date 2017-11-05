@@ -36,6 +36,7 @@ public class ScheduleTest
     
     assertFalse(schedule.equals(new Schedule(14*60+1)));
     assertFalse(schedule.equals(new Schedule(4,14*60)));
+    assertFalse(schedule.equals(new Schedule(4*60,8*60,1)));
     assertFalse(schedule.equals(null));
     assertFalse(schedule.equals(14));
   }
@@ -51,6 +52,11 @@ public class ScheduleTest
     Schedule otherSchedule=new Schedule(4,14*60);
     assertEquals(otherSchedule,schedule);
     assertEquals(otherSchedule.hashCode(),schedule.hashCode());
+
+    assertFalse(schedule.equals(new Schedule(14*60)));
+    assertFalse(schedule.equals(new Schedule(4,14*60+1)));
+    assertFalse(schedule.equals(new Schedule(5,14*60)));
+    assertFalse(schedule.equals(new Schedule(4*60,8*60,1)));
   }
   
   @Test
@@ -62,6 +68,12 @@ public class ScheduleTest
     assertEquals(8*60,schedule.getStop());
     assertEquals(1,schedule.getInterval());
     
+    assertFalse(schedule.equals(new Schedule(14*60)));
+    assertFalse(schedule.equals(new Schedule(4,14*60)));
+    assertFalse(schedule.equals(new Schedule(4*60,8*60,2)));
+    assertFalse(schedule.equals(new Schedule(4*60+1,8*60,1)));
+    assertFalse(schedule.equals(new Schedule(4*60,8*60+1,1)));
+
     Schedule otherSchedule=new Schedule(4*60,8*60,1);
     assertEquals(otherSchedule,schedule);
     assertEquals(otherSchedule.hashCode(),schedule.hashCode());

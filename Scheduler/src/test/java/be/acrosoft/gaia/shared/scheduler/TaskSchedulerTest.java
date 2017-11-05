@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.junit.After;
 import org.junit.Test;
@@ -44,12 +45,12 @@ public class TaskSchedulerTest
       {
         if(Files.isDirectory(path))
         {
-          Files.list(path).forEach(this::delete);
+          try(Stream<Path> stream=Files.list(path))
+          {
+            stream.forEach(this::delete);
+          }
         }
-        else
-        {
-          Files.delete(path);
-        }
+        Files.delete(path);
       }
     }
     catch(IOException ex)
