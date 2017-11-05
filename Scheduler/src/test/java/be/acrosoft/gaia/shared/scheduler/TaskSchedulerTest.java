@@ -21,14 +21,48 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
+import org.junit.After;
 import org.junit.Test;
+
+import be.acrosoft.gaia.shared.util.Platform;
 
 @SuppressWarnings({"javadoc","nls"})
 public class TaskSchedulerTest
 {
+  private void delete(Path path)
+  {
+    try
+    {
+      if(Files.exists(path))
+      {
+        if(Files.isDirectory(path))
+        {
+          Files.list(path).forEach(this::delete);
+        }
+        else
+        {
+          Files.delete(path);
+        }
+      }
+    }
+    catch(IOException ex)
+    {
+      fail(ex.getMessage());
+    }
+  }
+  
+  @After
+  public void cleanup()
+  {
+    delete(Paths.get("crontab.saved"));
+  }
 
   private void testSchedule(Schedule schedule)
   {
@@ -84,6 +118,7 @@ public class TaskSchedulerTest
   @Test
   public void testWrongTime()
   {
+    if(!Platform.isWindows()) return;
     TaskScheduler sch=TaskSchedulerRegistry.getTaskScheduler();
     if(sch.checkAvailability()!=null) return;
     String name=UUID.randomUUID().toString();
@@ -94,6 +129,7 @@ public class TaskSchedulerTest
   @Test
   public void testWrongDay()
   {
+    if(!Platform.isWindows()) return;
     TaskScheduler sch=TaskSchedulerRegistry.getTaskScheduler();
     if(sch.checkAvailability()!=null) return;
     String name=UUID.randomUUID().toString();
@@ -102,8 +138,9 @@ public class TaskSchedulerTest
   }
 
   @Test
-  public void testWrongInternal()
+  public void testWrongInterval()
   {
+    if(!Platform.isWindows()) return;
     TaskScheduler sch=TaskSchedulerRegistry.getTaskScheduler();
     if(sch.checkAvailability()!=null) return;
     String name=UUID.randomUUID().toString();

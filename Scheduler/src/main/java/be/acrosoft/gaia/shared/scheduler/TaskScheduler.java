@@ -38,29 +38,9 @@ public interface TaskScheduler
   
   /**
    * List all existing tasks from the scheduler.
-   * @param extractor task name extractor.
-   * @return all available tasks. 
-   */
-  public List<TaskSummary> listTasks(TaskNameExtractor extractor);
-
-  /**
-   * List all existing tasks from the scheduler using the default extractor.
-   * This is equivalent to listTasks(getDefaultTaskNameExtractor()).
    * @return all available tasks. 
    */
   public List<TaskSummary> listTasks();
-  
-  /**
-   * Set the default taskname extractor.
-   * @param extractor default extractor to use.
-   */
-  public void setDefaultTaskNameExtractor(TaskNameExtractor extractor);
-  
-  /**
-   * Get the default taskname extractor currently in use.
-   * @return default taskname extractor.
-   */
-  public TaskNameExtractor getDefaultTaskNameExtractor();
   
   /**
    * Check that the system scheduler is ready for normal operation.

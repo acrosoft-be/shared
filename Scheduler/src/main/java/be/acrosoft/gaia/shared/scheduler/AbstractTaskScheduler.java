@@ -24,35 +24,14 @@ import be.acrosoft.gaia.shared.util.ProcessTool;
  */
 public abstract class AbstractTaskScheduler implements TaskScheduler
 {
-  private TaskNameExtractor _extractor;
-  
   /**
    * Create a new AbstractTaskScheduler.
    */
   public AbstractTaskScheduler()
   {
-    _extractor=new NullTaskNameExtractor();
   }
   
-  @Override
-  public List<TaskSummary> listTasks()
-  {
-    return listTasks(getDefaultTaskNameExtractor());
-  }
-  
-  @Override
-  public void setDefaultTaskNameExtractor(TaskNameExtractor extractor)
-  {
-    _extractor=extractor;
-  }
-  
-  @Override
-  public TaskNameExtractor getDefaultTaskNameExtractor()
-  {
-    return _extractor;
-  }
-  
-  private String asString(List<String> list)
+  private static String asString(List<String> list)
   {
     StringBuilder bld=new StringBuilder();
     for(String l:list)
@@ -71,7 +50,7 @@ public abstract class AbstractTaskScheduler implements TaskScheduler
    * @param res process result.
    * @return user-readable string.
    */
-  protected String toString(ProcessTool.ProcessResult res)
+  public static String toString(ProcessTool.ProcessResult res)
   {
     String o=asString(res.output);
     String e=asString(res.error);

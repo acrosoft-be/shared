@@ -238,7 +238,7 @@ public class WindowsTaskScheduler extends AbstractTaskScheduler
   }
   
   @Override
-  public List<TaskSummary> listTasks(TaskNameExtractor extractor)
+  public List<TaskSummary> listTasks()
   {
     List<TaskSummary> ans=new ArrayList<TaskSummary>();
     if(checkAvailability()!=null)

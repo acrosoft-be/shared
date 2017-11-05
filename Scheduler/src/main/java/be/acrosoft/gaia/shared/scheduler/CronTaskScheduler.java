@@ -33,118 +33,197 @@ import be.acrosoft.gaia.shared.util.ProcessTool.ProcessResult;
 @OSSpecific({GaiaConstants.OS_NAME_WINDOWS,GaiaConstants.OS_NAME_MACOSX})
 public class CronTaskScheduler extends AbstractTaskScheduler
 {
+  static interface CronTab
+  {
+    public void cleanup();
+    public String read(List<String> tab);
+    public String apply(List<String> tab);
+  }
+  
+  private static class ProcessCronTab implements CronTab
+  {
+    @Override
+    public void cleanup()
+    {
+      File back=new File("crontab.saved"); //$NON-NLS-1$
+      back.mkdirs();
+      long now=System.currentTimeMillis();
+      File[] files=back.listFiles();
+      for(File file:files)
+      {
+        if(file.getName().startsWith("crontab.save")) //$NON-NLS-1$
+        {
+          long lastModified=file.lastModified();
+          if(now-lastModified>1L*30*24*60*60*1000)  //30 days
+          {
+            file.delete();
+          }
+        }
+      }
+    }
+    
+    private void writeTab(List<String> tab,File file) throws IOException
+    {
+      Writer wr=new FileWriter(file);
+      try
+      {
+        for(String line:tab)
+        {
+          wr.write(line);
+          wr.write("\n"); //$NON-NLS-1$
+        }
+        wr.flush();
+      }
+      finally
+      {
+        wr.close();
+      }
+    }
+    
+    @Override
+    public String read(List<String> ans)
+    {
+      try
+      {
+        ProcessResult res=ProcessTool.execute("crontab","-l"); //$NON-NLS-1$ //$NON-NLS-2$
+        if(res.result==0)
+        {
+          ans.addAll(res.output);
+          return null;
+        }
+        else if(res.result==1)
+        {
+          return null;
+          //Probably empty
+        }
+        else
+        {
+          return res.error.toString();
+        }
+      }
+      catch(IOException ex)
+      {
+        return ex.getMessage();
+      }
+    }
+    
+    private void backupTab() throws IOException
+    {
+      File back=new File("crontab.saved"); //$NON-NLS-1$
+      File file=new File(back,"crontab.save"); //$NON-NLS-1$
+      int i=0;
+      while(file.exists())
+      {
+        i++;
+        file=new File(back,"crontab.save."+i); //$NON-NLS-1$
+      }
+      List<String> tab=new ArrayList<String>();
+      read(tab);
+      writeTab(tab,file);
+    }
+
+    @Override
+    public String apply(List<String> tab)
+    {
+      try
+      {
+        backupTab();
+        File tmp=File.createTempFile("acrosoft","tmp"); //$NON-NLS-1$ //$NON-NLS-2$
+        try
+        {
+          writeTab(tab,tmp);
+          ProcessResult res=ProcessTool.execute("crontab",tmp.getAbsolutePath()); //$NON-NLS-1$
+          if(res.result==0)
+          {
+            return null;
+          }
+          return AbstractTaskScheduler.toString(res);
+        }
+        finally
+        {
+          tmp.delete();
+        }
+      }
+      catch(IOException ex)
+      {
+        return ex.getMessage();
+      }
+    }
+    
+  }
+  
+  private static final String PREFIX=" || /bin/echo 'Acrosoft taskname="; //$NON-NLS-1$
+  private static final String POSTFIX="' > /dev/null"; //$NON-NLS-1$
+  
+  private CronTab _tab;
+  
+  CronTaskScheduler(CronTab tab)
+  {
+    _tab=tab;
+    _tab.cleanup();
+    migrate();
+  }
+  
   /**
    * Create a new CronTaskScheduler.
    */
   public CronTaskScheduler()
   {
-    setDefaultTaskNameExtractor(new CronTaskNameExtractor());
-    cleanup();
+    this(new ProcessCronTab());
   }
   
-  private void cleanup()
+  private String getTaskName(String command)
   {
-    File back=new File("crontab.saved"); //$NON-NLS-1$
-    back.mkdirs();
-    long now=System.currentTimeMillis();
-    File[] files=back.listFiles();
-    for(File file:files)
+    if(command==null) return null;
+    
+    String key="taskname="; //$NON-NLS-1$
+    int pos=command.indexOf(key);
+    if(pos<0)
     {
-      if(file.getName().startsWith("crontab.save")) //$NON-NLS-1$
+      return null;
+    }
+    String name=command.substring(pos+key.length());
+    pos=name.indexOf(' ');
+    if(pos<0)
+    {
+      if(name.length()==0)
+        return null;
+      return name;
+    }
+    if(pos==0)
+    {
+      return null;
+    }
+    return name.substring(0,pos);
+  }
+  
+  private void migrate()
+  {
+    List<String> existingTab=new ArrayList<>();
+    String error=_tab.read(existingTab);
+    if(error!=null) return;
+    
+    List<String> newTab=new ArrayList<>();
+    for(String line:existingTab)
+    {
+      if(line.startsWith("#") && line.contains("Acrosoft")) //$NON-NLS-1$ //$NON-NLS-2$
       {
-        long lastModified=file.lastModified();
-        if(now-lastModified>1L*30*24*60*60*1000)  //30 days
+        continue;
+      }
+      if(!line.contains(PREFIX))
+      {
+        String name=getTaskName(getCommand(line));
+        if(name!=null)
         {
-          file.delete();
+          line=line.replace(" taskname="+name,""); //$NON-NLS-1$ //$NON-NLS-2$
+          line=line+PREFIX+name+POSTFIX;
         }
       }
+      
+      newTab.add(line);
     }
-  }
-  
-  private void writeTab(List<String> tab,File file) throws IOException
-  {
-    Writer wr=new FileWriter(file);
-    try
-    {
-      for(String line:tab)
-      {
-        wr.write(line);
-        wr.write("\n"); //$NON-NLS-1$
-      }
-      wr.flush();
-    }
-    finally
-    {
-      wr.close();
-    }
-  }
-  
-  private String readTab(List<String> ans)
-  {
-    try
-    {
-      ProcessResult res=ProcessTool.execute("crontab","-l"); //$NON-NLS-1$ //$NON-NLS-2$
-      if(res.result==0)
-      {
-        ans.addAll(res.output);
-        return null;
-      }
-      else if(res.result==1)
-      {
-        return null;
-        //Probably empty
-      }
-      else
-      {
-        return res.error.toString();
-      }
-    }
-    catch(IOException ex)
-    {
-      return ex.getMessage();
-    }
-  }
-  
-  private void backupTab() throws IOException
-  {
-    File back=new File("crontab.saved"); //$NON-NLS-1$
-    File file=new File(back,"crontab.save"); //$NON-NLS-1$
-    int i=0;
-    while(file.exists())
-    {
-      i++;
-      file=new File(back,"crontab.save."+i); //$NON-NLS-1$
-    }
-    List<String> tab=new ArrayList<String>();
-    readTab(tab);
-    writeTab(tab,file);
-  }
-
-  private String updateTab(List<String> tab)
-  {
-    try
-    {
-      backupTab();
-      File tmp=File.createTempFile("acrosoft","tmp"); //$NON-NLS-1$ //$NON-NLS-2$
-      try
-      {
-        writeTab(tab,tmp);
-        ProcessResult res=ProcessTool.execute("crontab",tmp.getAbsolutePath()); //$NON-NLS-1$
-        if(res.result==0)
-        {
-          return null;
-        }
-        return toString(res);
-      }
-      finally
-      {
-        tmp.delete();
-      }
-    }
-    catch(IOException ex)
-    {
-      return ex.getMessage();
-    }
+    
+    _tab.apply(newTab);
   }
   
   private String getCommand(String line)
@@ -163,12 +242,13 @@ public class CronTaskScheduler extends AbstractTaskScheduler
   public String createTask(Task task)
   {
     List<String> existingTab=new ArrayList<String>();
-    String error=readTab(existingTab);
+    String error=_tab.read(existingTab);
     if(error!=null)
     {
       return error;
     }
     
+    String command=String.format("%1$s %2$s%3$s%4$s%5$s",task.getCommand(),task.getParameters(),PREFIX,task.getName(),POSTFIX); //$NON-NLS-1$
     String toAdd=null;
     
     switch(task.getSchedule().getType())
@@ -183,14 +263,14 @@ public class CronTaskScheduler extends AbstractTaskScheduler
         }
         int min=task.getSchedule().getTime()%60;
         int hour=task.getSchedule().getTime()/60;
-        toAdd=String.format("%1$s %2$s * * %3$s %4$s %5$s",min,hour,day,task.getCommand(),task.getParameters()); //$NON-NLS-1$
+        toAdd=String.format("%1$s %2$s * * %3$s %4$s",min,hour,day,command); //$NON-NLS-1$
         break;
       }
       case ONCE_EVERY_DAY:
       {
         int min=task.getSchedule().getTime()%60;
         int hour=task.getSchedule().getTime()/60;
-        toAdd=String.format("%1$s %2$s * * * %3$s %4$s",min,hour,task.getCommand(),task.getParameters()); //$NON-NLS-1$
+        toAdd=String.format("%1$s %2$s * * * %3$s",min,hour,command); //$NON-NLS-1$
         break;
       }
       case MANY_TIMES_EVERY_DAY:
@@ -213,17 +293,16 @@ public class CronTaskScheduler extends AbstractTaskScheduler
           current+=interval*60;
         }
         
-        toAdd=String.format("%1$s %2$s * * * %3$s %4$s",min,hours,task.getCommand(),task.getParameters()); //$NON-NLS-1$
+        toAdd=String.format("%1$s %2$s * * * %3$s",min,hours,command); //$NON-NLS-1$
         break;
       }
     }
     
     if(toAdd!=null)
     {
-      existingTab.add("# The following line has been added by Acrosoft's Task Scheduler utility for task "+task.getName()+". Backup of original crontab is kept in installation directory for 30 days."); //$NON-NLS-1$ //$NON-NLS-2$
       existingTab.add(toAdd);
     }
-    return updateTab(existingTab);
+    return _tab.apply(existingTab);
   }
 
   @Override
@@ -231,7 +310,7 @@ public class CronTaskScheduler extends AbstractTaskScheduler
   {
     List<String> newTab=new ArrayList<String>();
     List<String> existingTab=new ArrayList<String>();
-    String error=readTab(existingTab);
+    String error=_tab.read(existingTab);
     if(error!=null)
     {
       return error;
@@ -241,28 +320,33 @@ public class CronTaskScheduler extends AbstractTaskScheduler
       String cmd=getCommand(line);
       if(cmd!=null)
       {
-        String lineName=getDefaultTaskNameExtractor().getTaskName(cmd);
-        if(lineName!=null && lineName.equals(name))
+        int pos=cmd.indexOf(PREFIX);
+        if(pos>=0)
         {
-          continue;
+          String task=cmd.substring(pos+PREFIX.length());
+          pos=task.indexOf(POSTFIX);
+          if(pos>0)
+          {
+            task=task.substring(0,pos);
+            if(name.equals(task))
+            {
+              continue;
+            }
+          }
         }
-      }
-      if(line.startsWith("#") && line.contains("Acrosoft") && line.contains(name)) //$NON-NLS-1$ //$NON-NLS-2$
-      {
-        continue;
       }
       newTab.add(line);
     }
-    error=updateTab(newTab);
+    error=_tab.apply(newTab);
     return error;
   }
 
   @Override
-  public List<TaskSummary> listTasks(TaskNameExtractor extractor)
+  public List<TaskSummary> listTasks()
   {
     List<String> tab=new ArrayList<String>();
     List<TaskSummary> ans=new ArrayList<TaskSummary>();
-    String error=readTab(tab);
+    String error=_tab.read(tab);
     if(error!=null)
     {
       System.err.println(error);
@@ -274,21 +358,26 @@ public class CronTaskScheduler extends AbstractTaskScheduler
       String cmd=getCommand(line);
       if(cmd!=null)
       {
-        String name=extractor.getTaskName(cmd);
-        String params=""; //$NON-NLS-1$
-        int pos=cmd.indexOf(' ');
+        int pos=cmd.indexOf(PREFIX);
         if(pos>=0)
         {
-          params=cmd.substring(pos+1);
+          String task=cmd.substring(pos+PREFIX.length());
           cmd=cmd.substring(0,pos);
-        }
+          pos=task.indexOf(POSTFIX);
+          if(pos>0)
+          {
+            task=task.substring(0,pos);
+            String params=""; //$NON-NLS-1$
+            pos=cmd.indexOf(' ');
+            if(pos>=0)
+            {
+              params=cmd.substring(pos+1);
+              cmd=cmd.substring(0,pos);
+            }
         
-        if(name==null)
-        {
-          name=cmd;
+            ans.add(new TaskSummary(task,cmd,params));
+          }
         }
-          
-        ans.add(new TaskSummary(name,cmd,params));
       }
     }
     
