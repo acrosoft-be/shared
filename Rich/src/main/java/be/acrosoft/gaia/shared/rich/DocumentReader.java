@@ -17,12 +17,14 @@ package be.acrosoft.gaia.shared.rich;
 
 /**
  * DocumentReader.
+ * @param <S> source type.
  */
-public interface DocumentReader
+public interface DocumentReader<S>
 {
   /**
-   * Read the document.
+   * Read the document from the given source.
+   * @param source source to read from.
    * @return document.
    */
-  public RichDocument read();
+  public RichDocument read(S source);
 }

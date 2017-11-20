@@ -62,6 +62,8 @@ public class ParagraphStyle extends Style implements Cloneable
   private String _bulletText;
   private TextStyle _bulletTextStyle;
   private NumberedList _list;
+  private double _spacingBefore;
+  private double _spacingAfter;
   
   /**
    * Create a new ParagraphStyle.
@@ -76,6 +78,8 @@ public class ParagraphStyle extends Style implements Cloneable
     getBulletTextStyle().setFontName("Symbol"); //$NON-NLS-1$
     setIndent(0);
     setFirstLineIndent(0);
+    setSpacingBefore(0);
+    setSpacingAfter(0);
   }
   
   @Override
@@ -84,7 +88,7 @@ public class ParagraphStyle extends Style implements Cloneable
     if(o==null) return false;
     if(!(o instanceof ParagraphStyle)) return false;
     ParagraphStyle p=(ParagraphStyle)o;
-    return _alignment.equals(p._alignment)&&_indent==p._indent;
+    return _alignment.equals(p._alignment)&&_indent==p._indent&&_spacingBefore==p._spacingBefore&&_spacingAfter==p._spacingAfter;
   }
   
   @Override
@@ -240,6 +244,42 @@ public class ParagraphStyle extends Style implements Cloneable
   public NumberedList getList()
   {
     return _list;
+  }
+  
+  /**
+   * Set the spacing that needs to be observed before this paragraph.
+   * @param spacingBefore spacing before, in points.
+   */
+  public void setSpacingBefore(double spacingBefore)
+  {
+    _spacingBefore=spacingBefore;
+  }
+  
+  /**
+   * Get the space to be observed before this paragraph.
+   * @return spacing before the paragraph, in points.
+   */
+  public double getSpacingBefore()
+  {
+    return _spacingBefore;
+  }
+  
+  /**
+   * Set the spacing that needs to be observed after this paragraph.
+   * @param spacingAfter spacing after, in points.
+   */
+  public void setSpacingAfter(double spacingAfter)
+  {
+    _spacingAfter=spacingAfter;
+  }
+  
+  /**
+   * Get the spacing to be observed after this paragraph.
+   * @return spacing after the paragraph, in points.
+   */
+  public double getSpacingAfter()
+  {
+    return _spacingAfter;
   }
 
 

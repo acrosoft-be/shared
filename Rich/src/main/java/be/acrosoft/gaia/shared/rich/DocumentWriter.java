@@ -17,17 +17,15 @@ package be.acrosoft.gaia.shared.rich;
 
 /**
  * DocumentWriter.
+ * @param <T> target type.
  */
-public interface DocumentWriter
+public interface DocumentWriter<T>
 {
   /**
    * Write the given document.
    * @param doc document to write.
+   * @param target target to write to.
    */
-  public void write(RichDocument doc);
+  public void write(RichDocument doc,T target);
   
-  /**
-   * Release any resource this writer could hold on the target.
-   */
-  public void dispose();
 }

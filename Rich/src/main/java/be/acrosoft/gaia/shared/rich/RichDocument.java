@@ -25,7 +25,6 @@ import java.util.List;
 public class RichDocument implements Iterable<Paragraph>
 {
   private DocumentMeta _meta;
-  private DocumentStyle _style;
   private List<Paragraph> _paragraphs;
   
   /**
@@ -34,7 +33,6 @@ public class RichDocument implements Iterable<Paragraph>
   public RichDocument()
   {
     setMeta(new DocumentMeta());
-    setStyle(new DocumentStyle());
     _paragraphs=new ArrayList<Paragraph>();
   }
 
@@ -54,24 +52,6 @@ public class RichDocument implements Iterable<Paragraph>
   public DocumentMeta getMeta()
   {
     return _meta;
-  }
-
-  /**
-   * Set the style.
-   * @param style The style to set.
-   */
-  public void setStyle(DocumentStyle style)
-  {
-    _style=style;
-  }
-
-  /**
-   * Get the style.
-   * @return Returns the style.
-   */
-  public DocumentStyle getStyle()
-  {
-    return _style;
   }
   
   /**

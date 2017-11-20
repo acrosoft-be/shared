@@ -16,6 +16,7 @@
 package be.acrosoft.gaia.shared.rich.readers.rtf;
 
 import be.acrosoft.gaia.shared.rich.ImageSection;
+import be.acrosoft.gaia.shared.rich.ImageSection.Unit;
 
 
 /**
@@ -106,8 +107,8 @@ public class PictureDestination extends AbstractDestination
     ImageLoader loader=new ImageLoader();
     loader.load(bis);*/
     _section.setData(data);
-    _section.setWidth(_width*_scaleX);
-    _section.setHeight(_height*_scaleY);
+    _section.setWidth(_width*_scaleX,Unit.POINT);
+    _section.setHeight(_height*_scaleY,Unit.POINT);
   }
 
 }

@@ -24,39 +24,24 @@ import be.acrosoft.gaia.shared.rich.TextSection;
 /**
  * FlatTextWriter
  */
-public class FlatTextWriter implements DocumentWriter
+public class FlatTextWriter implements DocumentWriter<StringBuilder>
 {
-  private StringBuilder _builder;
-  
-  /**
-   * Create a new FlatTextWriter.
-   * @param builder target string builder.
-   */
-  public FlatTextWriter(StringBuilder builder)
-  {
-    _builder=builder;
-  }
 
   @Override
-  public void write(RichDocument doc)
+  public void write(RichDocument doc,StringBuilder builder)
   {
     for(Paragraph p:doc.getParagraphs())
     {
-      if(_builder.length()>0) _builder.append('\n');
+      if(builder.length()>0) builder.append('\n');
       for(Section s:p.getSections())
       {
         if(s instanceof TextSection)
         {
           TextSection text=(TextSection)s;
-          _builder.append(text.getText());
+          builder.append(text.getText());
         }
       }
     }
-  }
-
-  @Override
-  public void dispose()
-  {
   }
 
 }

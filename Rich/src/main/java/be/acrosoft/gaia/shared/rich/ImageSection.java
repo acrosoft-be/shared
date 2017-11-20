@@ -20,9 +20,28 @@ package be.acrosoft.gaia.shared.rich;
  */
 public class ImageSection extends Section
 {
+  /**
+   * The unit used for the image size.
+   */
+  public static enum Unit
+  {
+    /**
+     * Pixel.
+     */
+    PIXEL,
+    /**
+     * Point.
+     */
+    POINT
+  }
+  
   private byte[] _data;
+  private double _leftOffset;
+  private double _topOffset;
   private double _width;
   private double _height;
+  private Unit _widthUnit;
+  private Unit _heightUnit;
   
   /**
    * Create a new ImageSection.
@@ -39,8 +58,12 @@ public class ImageSection extends Section
   public ImageSection(byte[] data)
   {
     _data=data;
+    _leftOffset=0;
+    _topOffset=0;
     _width=-1;
     _height=-1;
+    _widthUnit=Unit.POINT;
+    _heightUnit=Unit.POINT;
   }
   
   
@@ -65,10 +88,12 @@ public class ImageSection extends Section
   /**
    * Set the width.
    * @param width The width to set.
+   * @param unit unit of the width.
    */
-  public void setWidth(double width)
+  public void setWidth(double width,Unit unit)
   {
     _width=width;
+    _widthUnit=unit;
   }
 
   /**
@@ -79,16 +104,27 @@ public class ImageSection extends Section
   {
     return _width;
   }
+  
+  /**
+   * Get the width unit.
+   * @return width unit.
+   */
+  public Unit getWidthUnit()
+  {
+    return _widthUnit;
+  }
 
   /**
    * Set the height.
    * @param height The height to set.
+   * @param unit unit of the height.
    */
-  public void setHeight(double height)
+  public void setHeight(double height,Unit unit)
   {
     _height=height;
+    _heightUnit=unit;
   }
-
+  
   /**
    * Get the height.
    * @return Returns the height.
@@ -96,6 +132,51 @@ public class ImageSection extends Section
   public double getHeight()
   {
     return _height;
+  }
+  
+  /**
+   * Get the height unit.
+   * @return height unit.
+   */
+  public Unit getHeightUnit()
+  {
+    return _heightUnit;
+  }
+  
+  /**
+   * Set the left offset for the image, in points.
+   * @param leftOffset left offset in points.
+   */
+  public void setLeftOffset(double leftOffset)
+  {
+    _leftOffset=leftOffset;
+  }
+  
+  /**
+   * Get the left offset, in points.
+   * @return left offset.
+   */
+  public double getLeftOffset()
+  {
+    return _leftOffset;
+  }
+  
+  /**
+   * Set the top offset for the image, in points.
+   * @param topOffset top offset.
+   */
+  public void setTopOffset(double topOffset)
+  {
+    _topOffset=topOffset;
+  }
+  
+  /**
+   * Get the top offset of the image, in points.
+   * @return top offset.
+   */
+  public double getTopOffset()
+  {
+    return _topOffset;
   }
   
 }

@@ -29,19 +29,8 @@ import be.acrosoft.gaia.shared.rich.readers.rtf.RootDestination;
 /**
  * RTFReader.
  */
-public class RTFReader implements DocumentReader
+public class RTFReader implements DocumentReader<InputStream>
 {
-  private InputStream _is;
-    
-  /**
-   * Create a new RTFReader.
-   * @param is RTF input stream.
-   */
-  public RTFReader(InputStream is)
-  {
-    _is=is;
-  }
-
   private void print(int depth,String str)
   {
     //for(int i=0;i<depth-2;i++) System.out.print("  ");
@@ -49,13 +38,13 @@ public class RTFReader implements DocumentReader
   }
   
   @Override
-  public RichDocument read()
+  public RichDocument read(InputStream is)
   {
     try
     {
       RichDocument ans=new RichDocument();
       LinkedList<Context> stack=new LinkedList<Context>();
-      RTFParser parser=new RTFParser(_is);
+      RTFParser parser=new RTFParser(is);
       Global global=new Global(parser,ans);
       
       Context top=new Context(global);

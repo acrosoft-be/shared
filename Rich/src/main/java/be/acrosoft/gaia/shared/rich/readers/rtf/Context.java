@@ -15,7 +15,6 @@
  */
 package be.acrosoft.gaia.shared.rich.readers.rtf;
 
-import be.acrosoft.gaia.shared.rich.DocumentStyle;
 import be.acrosoft.gaia.shared.rich.ParagraphStyle;
 import be.acrosoft.gaia.shared.rich.TextStyle;
 
@@ -27,7 +26,6 @@ public class Context implements Cloneable
   private Destination _destination;
   private TextStyle _textStyle;
   private ParagraphStyle _paragraphStyle;
-  private DocumentStyle _documentStyle;
   private Global _global;
   private int _level;
   private int _listId;
@@ -48,7 +46,6 @@ public class Context implements Cloneable
     _global=global;
     _textStyle=new TextStyle();
     setParagraphStyle(new ParagraphStyle());
-    setDocumentStyle(new DocumentStyle());
   }
   
   @Override
@@ -61,7 +58,6 @@ public class Context implements Cloneable
     ans._destination=getDestination();
     ans._textStyle=getTextStyle().clone();
     ans.setParagraphStyle(getParagraphStyle());
-    ans.setDocumentStyle(getDocumentStyle());
     return ans;
   }
   
@@ -120,24 +116,6 @@ public class Context implements Cloneable
     return _paragraphStyle;
   }
 
-  /**
-   * Set the documentStyle.
-   * @param documentStyle The documentStyle to set.
-   */
-  public void setDocumentStyle(DocumentStyle documentStyle)
-  {
-    _documentStyle=documentStyle;
-  }
-
-  /**
-   * Get the documentStyle.
-   * @return Returns the documentStyle.
-   */
-  public DocumentStyle getDocumentStyle()
-  {
-    return _documentStyle;
-  }
-  
   /**
    * Get global information.
    * @return global information.
