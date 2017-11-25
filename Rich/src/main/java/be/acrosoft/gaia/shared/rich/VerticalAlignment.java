@@ -16,36 +16,20 @@
 package be.acrosoft.gaia.shared.rich;
 
 /**
- * List.
+ * VerticalAlignment.
  */
-public class NumberedList
+public enum VerticalAlignment
 {
-  private int _init;
-  
   /**
-   * Create a new NumberedList.
+   * Top alignment.
    */
-  public NumberedList()
-  {
-    _init=1;
-  }
-  
+  TOP,
   /**
-   * Set initial value.
-   * @param init initial value.
+   * Center alignment.
    */
-  public void setInitialValue(int init)
-  {
-    _init=init;
-  }
-  
+  CENTER,
   /**
-   * Get the initial value.
-   * @return initial value.
+   * Bottom alignment.
    */
-  public int getInitialValue()
-  {
-    return _init;
-  }
-
+  BOTTOM,
 }

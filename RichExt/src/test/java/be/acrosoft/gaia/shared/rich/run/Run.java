@@ -44,8 +44,10 @@ public class Run
     //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\PPL\\PROCEDURE ADMINISTRATIVE.doc"));
     //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\PPL\\info cours ppl email.doc"));
     //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\PPL\\Information cours PPL Namur et Bruxelles 2010.doc"));
-    RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\Mes fichiers reçus\\Contrat de fourniture de logiciel informatique - Centroptic.doc"));
-    //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\testList.doc"));
+    //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\Mes fichiers reçus\\Contrat de fourniture de logiciel informatique - Centroptic.doc"));
+    //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\testlist.doc"));
+    //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\testtable.doc"));
+    //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\testtable2.doc"));
     //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\religion.doc"));
     //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\Cours FSA2300 Plan détaillé.doc"));
     //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\INGI2210LABO1.doc"));
@@ -58,6 +60,8 @@ public class Run
     //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\labo telecom\\Intro Telecom - Labo2.doc"));
     //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\labo telecom\\Labo 3.doc"));
     //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\mémoire\\final\\Exemple.doc"));
+    //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\2766\\AR021008fr\\planmodule_appli_rep.doc"));
+    RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\Mes fichiers reçus\\A trip to Japan.doc"));
     new StyledTextWriter().write(document,st);
     
     shell.open();

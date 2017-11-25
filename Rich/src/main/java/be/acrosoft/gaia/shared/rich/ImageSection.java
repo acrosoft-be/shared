@@ -42,6 +42,7 @@ public class ImageSection extends Section
   private double _height;
   private Unit _widthUnit;
   private Unit _heightUnit;
+  private boolean _floating;
   
   /**
    * Create a new ImageSection.
@@ -64,6 +65,7 @@ public class ImageSection extends Section
     _height=-1;
     _widthUnit=Unit.POINT;
     _heightUnit=Unit.POINT;
+    _floating=false;
   }
   
   
@@ -96,6 +98,24 @@ public class ImageSection extends Section
     _widthUnit=unit;
   }
 
+  /**
+   * Return true if the image is floating above the text, or false if the image is inline.
+   * @return true if floating, false if inline.
+   */
+  public boolean isFloating()
+  {
+    return _floating;
+  }
+  
+  /**
+   * Set whether the image is floating above the text.
+   * @param floating true if image is floating, false if inline.
+   */
+  public void setFloating(boolean floating)
+  {
+    _floating=floating;
+  }
+  
   /**
    * Get the width.
    * @return Returns the width.

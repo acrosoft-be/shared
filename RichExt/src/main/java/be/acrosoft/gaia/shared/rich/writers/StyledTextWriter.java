@@ -32,14 +32,21 @@ import org.eclipse.swt.custom.TextChangeListener;
 import org.eclipse.swt.custom.TextChangedEvent;
 import org.eclipse.swt.custom.TextChangingEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.GlyphMetrics;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.TextLayout;
+import org.eclipse.swt.widgets.Canvas;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 
 import be.acrosoft.gaia.shared.rich.Alignment;
+import be.acrosoft.gaia.shared.rich.BorderStyle;
 import be.acrosoft.gaia.shared.rich.DocumentWriter;
 import be.acrosoft.gaia.shared.rich.ImageSection;
 import be.acrosoft.gaia.shared.rich.ImageSection.Unit;
@@ -49,6 +56,7 @@ import be.acrosoft.gaia.shared.rich.ParagraphStyle;
 import be.acrosoft.gaia.shared.rich.RGBColor;
 import be.acrosoft.gaia.shared.rich.RichDocument;
 import be.acrosoft.gaia.shared.rich.Section;
+import be.acrosoft.gaia.shared.rich.TableSection;
 import be.acrosoft.gaia.shared.rich.TextSection;
 import be.acrosoft.gaia.shared.rich.TextStyle;
 
@@ -65,6 +73,7 @@ public class StyledTextWriter implements DocumentWriter<StyledText>
     private int height;
     private Image image;
     private int offset;
+    private Control control;
   }
   
   private static class LineInfo
@@ -97,6 +106,7 @@ public class StyledTextWriter implements DocumentWriter<StyledText>
     private DisposeListener disposeListener;
     private PaintObjectListener paintObjectListener;
     private TextChangeListener textChangeListener;
+    private PaintListener paintListener;
     
     private void dispose(StyledText text)
     {
@@ -109,6 +119,11 @@ public class StyledTextWriter implements DocumentWriter<StyledText>
         if(nfo.image!=null)
         {
           nfo.image.dispose();
+        }
+        if(nfo.control!=null)
+        {
+          nfo.control.removePaintListener(paintListener);
+          nfo.control.dispose();
         }
       }
       for(ColorMapping map:colors)
@@ -179,9 +194,14 @@ public class StyledTextWriter implements DocumentWriter<StyledText>
     pt*=text.getDisplay().getDPI().x;
     return (int)pt;
   }
-    
+  
   @Override
   public void write(RichDocument doc,StyledText text)
+  {
+    write(doc.getParagraphs(),text);
+  }
+ 
+  private void write(List<Paragraph> paragraphs,StyledText text)
   {
     String dataKey=StyledTextWriter.this.getClass()+".holder"; //$NON-NLS-1$
     Holder previousHolder=(Holder)text.getData(dataKey);
@@ -216,20 +236,30 @@ public class StyledTextWriter implements DocumentWriter<StyledText>
         {
           if(nfo.offset==style.start)
           {
-            boolean wasAdvanced=gc.getAdvanced();
-            gc.setAntialias(SWT.ON);
-            gc.setInterpolation(SWT.HIGH);
-            if(nfo.image!=null)
+            if(nfo.control!=null)
             {
-              gc.drawImage(nfo.image,0,0,nfo.image.getBounds().width,nfo.image.getBounds().height,x+nfo.left,y+nfo.top,nfo.width,nfo.height);
+              nfo.control.setBounds(x+nfo.left,y+nfo.top,nfo.control.getSize().x,nfo.control.getSize().y);
+              nfo.control.setVisible(true);
             }
             else
             {
-              gc.setLineDash(new int[] {2,2});
-              gc.fillRectangle(x+nfo.left,y+nfo.top,nfo.width,nfo.height);
-              gc.drawRectangle(x+nfo.left,y+nfo.top,nfo.width,nfo.height);
+              boolean wasAdvanced=gc.getAdvanced();
+              gc.setAntialias(SWT.ON);
+              gc.setInterpolation(SWT.HIGH);
+              if(nfo.image!=null)
+              {
+                gc.drawImage(nfo.image,0,0,nfo.image.getBounds().width,nfo.image.getBounds().height,x+nfo.left,y+nfo.top,nfo.width,nfo.height);
+              }
+              else
+              {
+                gc.setLineDash(new int[] {2,2});
+                gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_BLACK));
+                gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_WHITE));
+                gc.fillRectangle(x+nfo.left,y+nfo.top,nfo.width,nfo.height);
+                gc.drawRectangle(x+nfo.left,y+nfo.top,nfo.width-1,nfo.height-1);
+              }
+              gc.setAdvanced(wasAdvanced);
             }
-            gc.setAdvanced(wasAdvanced);
             break;
           }
         }
@@ -242,18 +272,27 @@ public class StyledTextWriter implements DocumentWriter<StyledText>
           if(nfo.line==line)
           {
             String txt=null;
+            int index=event.bulletIndex;
+            if(nfo.style.getList()!=null)
+            {
+              index+=nfo.style.getList().getInitialValue();
+            }
+            else
+            {
+              index++;
+            }
             if(nfo.style.getBulletStyle()==ParagraphStyle.BulletStyle.BULLET)
               txt=nfo.style.getBulletText();
             else if(nfo.style.getBulletStyle()==ParagraphStyle.BulletStyle.LIST_NUMBER)
-              txt=""+(event.bulletIndex+1)+nfo.style.getBulletText(); //$NON-NLS-1$
+              txt=""+index+nfo.style.getBulletText(); //$NON-NLS-1$
             else if(nfo.style.getBulletStyle()==ParagraphStyle.BulletStyle.LIST_LOWER_ALPHABETIC)
-              txt=(char)(event.bulletIndex+'a')+nfo.style.getBulletText();
+              txt=(char)(index+'a')+nfo.style.getBulletText();
             else if(nfo.style.getBulletStyle()==ParagraphStyle.BulletStyle.LIST_UPPER_ALPHABETIC)
-              txt=(char)(event.bulletIndex+'A')+nfo.style.getBulletText();
+              txt=(char)(index+'A')+nfo.style.getBulletText();
             else if(nfo.style.getBulletStyle()==ParagraphStyle.BulletStyle.LIST_LOWER_ROMAN)
-              txt=Roman.toString(event.bulletIndex+1)+nfo.style.getBulletText();
+              txt=Roman.toString(index)+nfo.style.getBulletText();
             else if(nfo.style.getBulletStyle()==ParagraphStyle.BulletStyle.LIST_UPPER_ROMAN)
-              txt=Roman.toString(event.bulletIndex+1).toUpperCase()+nfo.style.getBulletText();
+              txt=Roman.toString(index).toUpperCase()+nfo.style.getBulletText();
             
             if(txt!=null)
             {
@@ -277,6 +316,60 @@ public class StyledTextWriter implements DocumentWriter<StyledText>
           }
         }
       }
+    };
+    holder.paintListener=event->
+    {
+      GC gc=event.gc;
+      boolean wasAdvanced=gc.getAdvanced();
+      gc.setAntialias(SWT.ON);
+      gc.setInterpolation(SWT.HIGH);
+      ImageInfo nfo=(ImageInfo)event.widget.getData(StyledTextWriter.this.getClass()+".imageinfo"); //$NON-NLS-1$
+      if(nfo!=null)
+      {
+        if(nfo.image!=null)
+        {
+          gc.drawImage(nfo.image,0,0,nfo.image.getBounds().width,nfo.image.getBounds().height,0,0,nfo.width,nfo.height);
+        }
+        else
+        {
+          gc.setLineDash(new int[] {2,2});
+          gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_BLACK));
+          gc.setBackground(gc.getDevice().getSystemColor(SWT.COLOR_WHITE));
+          gc.fillRectangle(0,0,nfo.width,nfo.height);
+          gc.drawRectangle(0,0,nfo.width-1,nfo.height-1);
+        }
+      }
+      
+      TableSection.Cell cell=(TableSection.Cell)event.widget.getData(StyledTextWriter.this.getClass()+".cell"); //$NON-NLS-1$
+      if(cell!=null)
+      {
+        StyledText st=(StyledText)event.widget;
+        if(cell.getTopBorder().getLineStyle()!=BorderStyle.LineStyle.NONE)
+        {
+          gc.setForeground(getColor(holder,st,cell.getTopBorder().getLineColor()));
+          gc.setLineWidth(pointToPixel(text,cell.getTopBorder().getLineWidth()));
+          gc.drawLine(0,0,st.getSize().x,0);
+        }
+        if(cell.getBottomBorder().getLineStyle()!=BorderStyle.LineStyle.NONE)
+        {
+          gc.setForeground(getColor(holder,st,cell.getBottomBorder().getLineColor()));
+          gc.setLineWidth(pointToPixel(text,cell.getBottomBorder().getLineWidth()));
+          gc.drawLine(0,st.getSize().y-1,st.getSize().x,st.getSize().y-1);
+        }
+        if(cell.getLeftBorder().getLineStyle()!=BorderStyle.LineStyle.NONE)
+        {
+          gc.setForeground(getColor(holder,st,cell.getLeftBorder().getLineColor()));
+          gc.setLineWidth(pointToPixel(text,cell.getLeftBorder().getLineWidth()));
+          gc.drawLine(0,0,0,st.getSize().y);
+        }
+        if(cell.getRightBorder().getLineStyle()!=BorderStyle.LineStyle.NONE)
+        {
+          gc.setForeground(getColor(holder,st,cell.getRightBorder().getLineColor()));
+          gc.setLineWidth(pointToPixel(text,cell.getRightBorder().getLineWidth()));
+          gc.drawLine(st.getSize().x-1,0,st.getSize().x-1,st.getSize().y);
+        }
+      }
+      gc.setAdvanced(wasAdvanced);
     };
     holder.textChangeListener=new TextChangeListener()
     {
@@ -325,7 +418,7 @@ public class StyledTextWriter implements DocumentWriter<StyledText>
 
     List<ImageInfo> images=new ArrayList<ImageInfo>();
     
-    for(Paragraph par:doc)
+    for(Paragraph par:paragraphs)
     {
       if(!firstParagraph)
         buffer.append(text.getLineDelimiter());
@@ -348,11 +441,148 @@ public class StyledTextWriter implements DocumentWriter<StyledText>
         {
           TextSection textSection=(TextSection)sect;
           StyleRange rng=new StyleRange();
+          String toAdd=textSection.getText();
+          if(toAdd.length()==0) toAdd=" "; //$NON-NLS-1$
           rng.start=buffer.length();
-          rng.length=textSection.getText().length();
+          rng.length=toAdd.length();
           formatStyle(holder,text,rng,par.getStyle(),textSection.getStyle());
-          buffer.append(textSection.getText());
+          buffer.append(toAdd);
           rngs.add(rng);
+        }
+        else if(sect instanceof TableSection)
+        {
+          TableSection tableSection=(TableSection)sect;
+          
+          int globalTopMargin=0;
+          int globalLeftMargin=0;
+          int globalRightMargin=0;
+          int globalBottomMargin=0;
+          for(TableSection.Row row:tableSection.getRows())
+          {
+            for(TableSection.Cell cell:row.getCells())
+            {
+              globalTopMargin=Math.max(globalTopMargin,pointToPixel(text,cell.getTopBorder().getLineWidth()+cell.getTopBorder().getMargin()));
+              globalLeftMargin=Math.max(globalLeftMargin,pointToPixel(text,cell.getLeftBorder().getLineWidth()+cell.getLeftBorder().getMargin()));
+              globalRightMargin=Math.max(globalRightMargin,pointToPixel(text,cell.getRightBorder().getLineWidth()+cell.getRightBorder().getMargin()));
+              globalBottomMargin=Math.max(globalBottomMargin,pointToPixel(text,cell.getBottomBorder().getLineWidth()+cell.getBottomBorder().getMargin()));
+            }
+          }
+          
+          
+          Composite composite=new Composite(text,SWT.NONE);
+          composite.setBackground(text.getBackground());
+          int baseY=0;
+          List<Integer> rowHeights=new ArrayList<>();
+          List<Object[]> controlsToSpan=new ArrayList<>(); //0:control 1:cell 2:row number
+          List<Object[]> controlsToAlign=new ArrayList<>(); //0:control 1:cell
+          
+          for(TableSection.Row row:tableSection.getRows())
+          {
+            int maxHeight=0;
+            List<Object[]> cellControls=new ArrayList<>(); //0:control 1:cell 2:width
+            for(TableSection.Cell cell:row.getCells())
+            {
+              int style=SWT.MULTI|SWT.WRAP;
+              if((text.getStyle()&SWT.READ_ONLY)!=0) style|=SWT.READ_ONLY;
+              StyledText cellText=new StyledText(composite,style);
+              cellText.setTopMargin(globalTopMargin);
+              cellText.setLeftMargin(globalLeftMargin);
+              cellText.setRightMargin(globalRightMargin);
+              cellText.setBottomMargin(globalBottomMargin);
+              cellText.addPaintListener(holder.paintListener);
+              cellText.setData(StyledTextWriter.this.getClass()+".cell",cell); //$NON-NLS-1$
+              write(cell.getContent(),cellText);
+              Point preferredSize=cellText.computeSize(cell.getWidth()!=0?pointToPixel(text,cell.getWidth()):SWT.DEFAULT,SWT.DEFAULT);
+              if(cell.getSpanY()>1) preferredSize.y=0;
+              if(cell.getWidth()!=0) preferredSize.x=pointToPixel(text,cell.getWidth());
+              if(row.getHeight()!=0) preferredSize.y=Math.max(preferredSize.y,pointToPixel(text,row.getHeight()));
+              
+              if(preferredSize.y>maxHeight) maxHeight=preferredSize.y;
+              cellControls.add(new Object[] {cellText,cell,preferredSize.x});
+              if(cell.getSpanY()==0)
+              {
+                cellText.setVisible(false);
+              }
+              else
+              {
+                controlsToAlign.add(new Object[] {cellText,cell});
+                if(cell.getSpanY()>1)
+                {
+                  controlsToSpan.add(new Object[] {cellText,cell,rowHeights.size()});
+                }
+              }
+              
+            }
+            
+            int baseX=0;
+            for(Object[] control:cellControls)
+            {
+              StyledText cellText=(StyledText)control[0];
+              int width=(int)control[2];
+              Rectangle bounds=new Rectangle(baseX,baseY,width,maxHeight);
+              cellText.setBounds(bounds);
+              baseX+=width;
+            }
+            
+            rowHeights.add(maxHeight);
+            
+            baseY+=maxHeight;
+          }
+          
+          //Vertical span adjustment
+          for(Object[] toSpan:controlsToSpan)
+          {
+            StyledText cellText=(StyledText)toSpan[0];
+            TableSection.Cell cell=(TableSection.Cell)toSpan[1];
+            int rowNumber=(int)toSpan[2];
+            int height=0;
+            for(int r=rowNumber;r<rowNumber+cell.getSpanY();r++)
+            {
+              height+=rowHeights.get(r);
+            }
+            cellText.setSize(cellText.getSize().x,height);
+          }
+          
+          //Vertical alignment
+          for(Object[] toAlign:controlsToAlign)
+          {
+            StyledText cellText=(StyledText)toAlign[0];
+            TableSection.Cell cell=(TableSection.Cell)toAlign[1];
+            int computedHeight=cellText.computeSize(cellText.getSize().x,SWT.DEFAULT).y;
+            int actualHeight=cellText.getSize().y;
+            int margin=0;
+            switch(cell.getVerticalAlignment())
+            {
+              case TOP:
+                break;
+              case CENTER:
+                margin=(actualHeight-computedHeight)/2;
+                break;
+              case BOTTOM:
+                margin=actualHeight-computedHeight;
+                break;
+            }
+            if(margin>0) cellText.setTopMargin(margin);
+          }
+          
+          composite.setSize(composite.computeSize(SWT.DEFAULT,SWT.DEFAULT));
+          
+          StyleRange rng=new StyleRange();
+          rng.start=buffer.length();
+          rng.length=1;
+          buffer.append("\ufffc"); //$NON-NLS-1$
+          rngs.add(rng);
+          ImageInfo nfo=new ImageInfo();
+          nfo.width=composite.getSize().x;
+          nfo.height=composite.getSize().y;
+          nfo.left=0;
+          nfo.top=0;
+          rng.metrics=new GlyphMetrics(nfo.height,0,nfo.width);
+          nfo.offset=rng.start;
+          nfo.control=composite;
+          nfo.control.setSize(nfo.width,nfo.height);
+          nfo.control.setVisible(false);
+          images.add(nfo);
         }
         else if(sect instanceof ImageSection)
         {
@@ -382,7 +612,14 @@ public class StyledTextWriter implements DocumentWriter<StyledText>
             {
               h=img.getImageData().height;
             }
-            rng.metrics=new GlyphMetrics(h+oy,0,w+ox);
+            if(image.isFloating())
+            {
+              rng.metrics=new GlyphMetrics(0,0,0);
+            }
+            else
+            {
+              rng.metrics=new GlyphMetrics(h+oy,0,w+ox);
+            }
             buffer.append("\ufffc"); //$NON-NLS-1$
             rngs.add(rng);
             ImageInfo nfo=new ImageInfo();
@@ -392,6 +629,15 @@ public class StyledTextWriter implements DocumentWriter<StyledText>
             nfo.left=ox;
             nfo.top=oy;
             nfo.offset=rng.start;
+            
+            if(image.isFloating())
+            {
+              nfo.control=new Canvas(text,SWT.NONE);
+              nfo.control.setSize(nfo.width,nfo.height);
+              nfo.control.setVisible(false);
+              nfo.control.addPaintListener(holder.paintListener);
+              nfo.control.setData(StyledTextWriter.this.getClass()+".imageinfo",nfo); //$NON-NLS-1$
+            }
             images.add(nfo);
           }
           catch(Exception ex)
@@ -420,7 +666,7 @@ public class StyledTextWriter implements DocumentWriter<StyledText>
     text.setStyleRanges(allRanges);
     
     int lineNumber=0;
-    for(Paragraph par:doc)
+    for(Paragraph par:paragraphs)
     {
       if(par.getStyle().getSpacingBefore()>3)
       {
