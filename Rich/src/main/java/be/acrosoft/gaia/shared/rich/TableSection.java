@@ -45,7 +45,7 @@ public class TableSection extends Section
     {
       _content=new ArrayList<>();
       _align=VerticalAlignment.TOP;
-      _spanY=0;
+      _spanY=1;
       _width=0;
       _leftBorder=new BorderStyle();
       _rightBorder=new BorderStyle();

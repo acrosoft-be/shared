@@ -24,7 +24,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import be.acrosoft.gaia.shared.rich.RichDocument;
-import be.acrosoft.gaia.shared.rich.readers.DOCReader;
+import be.acrosoft.gaia.shared.rich.readers.RTFReader;
 import be.acrosoft.gaia.shared.rich.writers.StyledTextWriter;
 
 @SuppressWarnings({"javadoc","nls"})
@@ -61,7 +61,11 @@ public class Run
     //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\labo telecom\\Labo 3.doc"));
     //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\mémoire\\final\\Exemple.doc"));
     //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\2766\\AR021008fr\\planmodule_appli_rep.doc"));
-    RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\Mes fichiers reçus\\A trip to Japan.doc"));
+    //RichDocument document=new DOCReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\Mes fichiers reçus\\A trip to Japan.doc"));
+    //RichDocument document=new RTFReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\testtable.rtf"));
+    //RichDocument document=new RTFReader().read(new FileInputStream("D:\\Users\\Plouf\\Downloads\\borders.rtf"));
+    RichDocument document=new RTFReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\simpletable.rtf"));
+    //RichDocument document=new RTFReader().read(new FileInputStream("D:\\Users\\Plouf\\Documents\\simple.rtf"));
     new StyledTextWriter().write(document,st);
     
     shell.open();

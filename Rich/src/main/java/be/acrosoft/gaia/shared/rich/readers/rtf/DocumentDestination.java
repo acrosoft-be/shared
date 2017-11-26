@@ -16,6 +16,8 @@
 package be.acrosoft.gaia.shared.rich.readers.rtf;
 
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.SortedMap;
 
 import be.acrosoft.gaia.shared.rich.Alignment;
@@ -25,6 +27,7 @@ import be.acrosoft.gaia.shared.rich.Paragraph;
 import be.acrosoft.gaia.shared.rich.ParagraphStyle;
 import be.acrosoft.gaia.shared.rich.RGBColor;
 import be.acrosoft.gaia.shared.rich.Section;
+import be.acrosoft.gaia.shared.rich.TableSection;
 import be.acrosoft.gaia.shared.rich.TextSection;
 import be.acrosoft.gaia.shared.rich.TextStyle;
 
@@ -33,10 +36,17 @@ import be.acrosoft.gaia.shared.rich.TextStyle;
  */
 public class DocumentDestination extends StyledTextDestination
 {
+  private List<Paragraph> _currentParagraphList;
   private Section _currentSection;
   private Paragraph _currentParagraph;
   private NumberedList _bulletList;
   private NumberedList _simpleList;
+  
+  private TableSection _currentTable;
+  private TableSection.Row _currentTableRow;
+  private TableSection.Cell _currentTableCell;
+  
+  private List<Integer> _cellWidths;
   
   @Override
   public void enter(Context context,Global global)
@@ -45,20 +55,38 @@ public class DocumentDestination extends StyledTextDestination
     _currentParagraph=null;
     _bulletList=new NumberedList();
     _simpleList=new NumberedList();
+    _currentParagraphList=global.getDocument().getParagraphs();
+    _cellWidths=new ArrayList<>();
+  }
+  
+  private void closeParagraph(Context context,Global global)
+  {
+    if(_currentParagraph==null) return;
+    _currentParagraph.setStyle(context.getParagraphStyle().clone());
+    _currentParagraph=null;
   }
   
   private void newParagraph(Context context,Global global)
   {
-    if(_currentParagraph!=null)
-      _currentParagraph.setStyle(context.getParagraphStyle().clone());
+    closeParagraph(context,global);
     _currentParagraph=new Paragraph();
     _currentParagraph.setStyle(context.getParagraphStyle());
-    global.getDocument().getParagraphs().add(_currentParagraph);
+    _currentParagraphList.add(_currentParagraph);
     _currentSection=null;
   }
   
   private void addText(Context context,Global global,String text)
   {
+    //Table cells are lazily created
+    if(_currentTableRow!=null && _currentTableCell==null) {
+      closeParagraph(context,global);
+      _currentTableCell=new TableSection.Cell();
+      int width=_cellWidths.get(_currentTableRow.getCells().size());
+      _currentTableRow.getCells().add(_currentTableCell);
+      _currentParagraphList=_currentTableCell.getContent();
+      _currentTableCell.setWidth(width/20.0);
+    }
+    
     if(_currentParagraph==null)
       newParagraph(context,global);
     
@@ -128,6 +156,8 @@ public class DocumentDestination extends StyledTextDestination
     }
     else if(code.equals("pard")) //$NON-NLS-1$
     {
+      _currentTable=null;
+      
       context.setParagraphStyle(new ParagraphStyle());
       TextStyle ts=global.getStyles().get(0);
       if(ts==null)
@@ -284,10 +314,32 @@ public class DocumentDestination extends StyledTextDestination
       _currentParagraph.getSections().add(_currentSection);
       context.setDestination(new PictureDestination((ImageSection)_currentSection));
     }
-    else if(code.equals("cell")) //$NON-NLS-1$
-      control("tab",null,context,global); //$NON-NLS-1$
+    else if(code.equals("trowd")) //$NON-NLS-1$
+    {
+      _cellWidths=new ArrayList<>();
+      if(_currentTable==null)
+      {
+        _currentTable=new TableSection();
+        if(_currentParagraph==null) newParagraph(context,global);
+        _currentParagraph.getSections().add(_currentTable);
+      }
+      _currentTableRow=new TableSection.Row();
+      _currentTable.getRows().add(_currentTableRow);
+      _currentTableCell=null;
+    }
     else if(code.equals("row")) //$NON-NLS-1$
-      control("par",null,context,global); //$NON-NLS-1$
+    {
+      _currentTableRow=null;
+      _currentParagraphList=global.getDocument().getParagraphs();
+    }
+    else if(code.equals("cell")) //$NON-NLS-1$
+    {
+      _currentTableCell=null;
+    }
+    else if(code.equals("cellx")) //$NON-NLS-1$
+    {
+      _cellWidths.add(Integer.parseInt(param));
+    }
     else
       super.control(code,parameter,context,global);
   }
