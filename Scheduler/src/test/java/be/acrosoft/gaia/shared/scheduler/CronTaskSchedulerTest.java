@@ -17,7 +17,6 @@ package be.acrosoft.gaia.shared.scheduler;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -128,51 +127,51 @@ public class CronTaskSchedulerTest
   }
   
   @Test
-  public void testAddEveryDay()
+  public void testAddEveryDay() throws TaskSchedulerException
   {
     TestCronTab test=new TestCronTab();
     CronTaskScheduler scheduler=new CronTaskScheduler(test);
     String name=UUID.randomUUID().toString();
-    assertNull(scheduler.createTask(new Task(name,new Schedule(4*60),"command","params")));
+    scheduler.createTask(new Task(name,new Schedule(4*60),"command","params"));
     assertEquals(1,test.value.size());
     assertEquals("0 4 * * * command params || /bin/echo 'Acrosoft taskname="+name+"' > /dev/null",test.value.get(0));
   }
   
   @Test
-  public void testAddSpecificDay()
+  public void testAddSpecificDay() throws TaskSchedulerException
   {
     TestCronTab test=new TestCronTab();
     CronTaskScheduler scheduler=new CronTaskScheduler(test);
     String name=UUID.randomUUID().toString();
-    assertNull(scheduler.createTask(new Task(name,new Schedule(4,4*60),"command","params")));
+    scheduler.createTask(new Task(name,new Schedule(4,4*60),"command","params"));
     assertEquals(1,test.value.size());
     assertEquals("0 4 * * 5 command params || /bin/echo 'Acrosoft taskname="+name+"' > /dev/null",test.value.get(0));
   }
 
   @Test
-  public void testAddSunday()
+  public void testAddSunday() throws TaskSchedulerException
   {
     TestCronTab test=new TestCronTab();
     CronTaskScheduler scheduler=new CronTaskScheduler(test);
     String name=UUID.randomUUID().toString();
-    assertNull(scheduler.createTask(new Task(name,new Schedule(6,4*60),"command","params")));
+    scheduler.createTask(new Task(name,new Schedule(6,4*60),"command","params"));
     assertEquals(1,test.value.size());
     assertEquals("0 4 * * 0 command params || /bin/echo 'Acrosoft taskname="+name+"' > /dev/null",test.value.get(0));
   }
   
   @Test
-  public void testAddInterval()
+  public void testAddInterval() throws TaskSchedulerException
   {
     TestCronTab test=new TestCronTab();
     CronTaskScheduler scheduler=new CronTaskScheduler(test);
     String name=UUID.randomUUID().toString();
-    assertNull(scheduler.createTask(new Task(name,new Schedule(2*60,23*60,2),"command","params")));
+    scheduler.createTask(new Task(name,new Schedule(2*60,23*60,2),"command","params"));
     assertEquals(1,test.value.size());
     assertEquals("0 2,4,6,8,10,12,14,16,18,20,22 * * * command params || /bin/echo 'Acrosoft taskname="+name+"' > /dev/null",test.value.get(0));
   }
   
   @Test
-  public void testList()
+  public void testList() throws TaskSchedulerException
   {
     TestCronTab test=new TestCronTab();
     test.value.add("# some stuff");
@@ -194,7 +193,7 @@ public class CronTaskSchedulerTest
   }
   
   @Test
-  public void testDelete()
+  public void testDelete() throws TaskSchedulerException
   {
     TestCronTab test=new TestCronTab();
     test.value.add("# some stuff");
@@ -204,7 +203,7 @@ public class CronTaskSchedulerTest
     test.value.add("0 4 * * * command3 params3");
     test.value.add("0 4 * * * command4 params4 || /bin/echo 'Acrosoft taskname=notthisone' > /dev/null");
     CronTaskScheduler scheduler=new CronTaskScheduler(test);
-    assertNull(scheduler.deleteTask("name"));
+    scheduler.deleteTask("name");
     assertEquals(5,test.value.size());
     assertEquals("# some stuff",test.value.get(0));
     assertEquals("0 4 * * * command1 params1",test.value.get(1));
@@ -261,7 +260,14 @@ public class CronTaskSchedulerTest
     TestCronTab test=new TestCronTab();
     test.value.add("# some stuff");
     test.readResult="test error";
-    assertEquals("test error",new CronTaskScheduler(test).createTask(new Task("name",new Schedule(0),"cmd","param")));
+    try
+    {
+      new CronTaskScheduler(test).createTask(new Task("name",new Schedule(0),"cmd","param"));
+    }
+    catch(TaskSchedulerException ex)
+    {
+      assertEquals("test error",ex.getLocalizedMessage());
+    }
     assertEquals(1,test.value.size());
     assertEquals("# some stuff",test.value.get(0));
   }
@@ -272,13 +278,20 @@ public class CronTaskSchedulerTest
     TestCronTab test=new TestCronTab();
     test.value.add("# some stuff");
     test.readResult="test error";
-    assertEquals("test error",new CronTaskScheduler(test).deleteTask("task"));
+    try
+    {
+      new CronTaskScheduler(test).deleteTask("task");
+    }
+    catch(TaskSchedulerException ex)
+    {
+      assertEquals("test error",ex.getLocalizedMessage());
+    }
     assertEquals(1,test.value.size());
     assertEquals("# some stuff",test.value.get(0));
   }
   
   @Test
-  public void testErrorOnList()
+  public void testErrorOnList() throws TaskSchedulerException
   {
     TestCronTab test=new TestCronTab();
     test.value.add("# some stuff");
@@ -287,10 +300,10 @@ public class CronTaskSchedulerTest
   }
   
   @Test
-  public void testAvailability()
+  public void testAvailability() throws TaskSchedulerException
   {
     TestCronTab test=new TestCronTab();
-    assertNull(new CronTaskScheduler(test).checkAvailability());
+    new CronTaskScheduler(test).checkAvailability();
   }
   
   @Test

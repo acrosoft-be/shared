@@ -20,7 +20,7 @@ import be.acrosoft.gaia.shared.util.OSSpecific;
 import be.acrosoft.gaia.shared.util.Platform;
 
 /**
- * TaskSchedulerRegistry.
+ * Entry point to get the system task scheduler.
  */
 @OSSpecific({GaiaConstants.OS_NAME_WINDOWS,GaiaConstants.OS_NAME_MACOSX,GaiaConstants.OS_NAME_LINUX})
 public class TaskSchedulerRegistry

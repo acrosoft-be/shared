@@ -24,6 +24,8 @@ import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
@@ -51,6 +53,8 @@ import be.belgium.eid.objects.SmartCardReadable;
 @SuppressWarnings("restriction")
 public class ReaderThread extends Thread implements CardReaderMonitor
 {
+  private static final Logger LOGGER=Logger.getLogger(ReaderThread.class.getName());
+  
   private static class Request
   {
     public static enum Command
@@ -195,7 +199,7 @@ public class ReaderThread extends Thread implements CardReaderMonitor
         }
         catch(ParseException ex)
         {
-          System.err.println(ex.getMessage());
+          LOGGER.log(Level.WARNING,ex.getMessage(),ex);
         }
       }
       data.country="be"; //$NON-NLS-1$

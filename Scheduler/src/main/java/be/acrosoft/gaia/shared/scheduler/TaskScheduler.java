@@ -18,33 +18,34 @@ package be.acrosoft.gaia.shared.scheduler;
 import java.util.List;
 
 /**
- * TaskScheduler.
+ * The main interface to a task scheduler.
  */
 public interface TaskScheduler
 {
   /**
    * Create a new task into the scheduler.
    * @param task task to create.
-   * @return error message if creation is not successful, null if everything is ok.
+   * @throws TaskSchedulerException in case of problem.
    */
-  public String createTask(Task task);
+  public void createTask(Task task) throws TaskSchedulerException;
   
   /**
    * Delete an existing task from the scheduler.
    * @param name name of the task to delete.
-   * @return error message if deletion is not successful, null if everything is ok.
+   * @throws TaskSchedulerException in case of problem.
    */
-  public String deleteTask(String name);
+  public void deleteTask(String name) throws TaskSchedulerException;
   
   /**
    * List all existing tasks from the scheduler.
    * @return all available tasks. 
+   * @throws TaskSchedulerException in case of problem.
    */
-  public List<TaskSummary> listTasks();
+  public List<TaskSummary> listTasks() throws TaskSchedulerException;
   
   /**
    * Check that the system scheduler is ready for normal operation.
-   * @return null if scheduler is ready for operation, localized error message otherwise.
+   * @throws TaskSchedulerException in case of problem.
    */
-  public String checkAvailability();
+  public void checkAvailability() throws TaskSchedulerException;
 }

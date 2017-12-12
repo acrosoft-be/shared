@@ -24,13 +24,6 @@ import be.acrosoft.gaia.shared.util.ProcessTool;
  */
 public abstract class AbstractTaskScheduler implements TaskScheduler
 {
-  /**
-   * Create a new AbstractTaskScheduler.
-   */
-  public AbstractTaskScheduler()
-  {
-  }
-  
   private static String asString(List<String> list)
   {
     StringBuilder bld=new StringBuilder();

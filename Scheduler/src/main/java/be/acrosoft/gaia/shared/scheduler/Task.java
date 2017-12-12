@@ -16,7 +16,7 @@
 package be.acrosoft.gaia.shared.scheduler;
 
 /**
- * Task.
+ * An individual scheduled task.
  */
 public class Task
 {

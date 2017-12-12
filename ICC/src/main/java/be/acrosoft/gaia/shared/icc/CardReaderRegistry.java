@@ -17,6 +17,8 @@ package be.acrosoft.gaia.shared.icc;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import be.acrosoft.gaia.shared.util.Debug;
 
@@ -25,6 +27,8 @@ import be.acrosoft.gaia.shared.util.Debug;
  */
 public class CardReaderRegistry
 {
+  private static final Logger LOGGER=Logger.getLogger(CardReaderRegistry.class.getName());
+  
   /**
    * The BE-ID driver name.
    */
@@ -72,7 +76,7 @@ public class CardReaderRegistry
     {
       if(Debug.isDebug())
       {
-        System.err.println("Could not load ICC driver "+driverName); //$NON-NLS-1$
+        LOGGER.log(Level.WARNING,"Could not load ICC driver "+driverName,th); //$NON-NLS-1$
         th.printStackTrace();
       }
       synchronized(_errors)

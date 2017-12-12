@@ -18,6 +18,8 @@ package be.acrosoft.gaia.shared.scheduler;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import be.acrosoft.gaia.shared.util.GaiaConstants;
 import be.acrosoft.gaia.shared.util.OSSpecific;
@@ -30,6 +32,8 @@ import be.acrosoft.gaia.shared.util.ProcessTool.ProcessResult;
 @OSSpecific(GaiaConstants.OS_NAME_WINDOWS)
 public class WindowsTaskScheduler extends AbstractTaskScheduler
 {
+  private static final Logger LOGGER=Logger.getLogger(WindowsTaskScheduler.class.getName());
+
   private String _unavailable=null;
   private long _lastCheck=0;
   private Object _lock=new Object();
@@ -50,13 +54,9 @@ public class WindowsTaskScheduler extends AbstractTaskScheduler
   }
   
   @Override
-  public String createTask(Task task)
+  public void createTask(Task task) throws TaskSchedulerException
   {
-    String check=checkAvailability();
-    if(check!=null)
-    {
-      return check;
-    }
+    checkAvailability();
 
     String versionString=System.getProperty("os.version"); //$NON-NLS-1$
     int pos=versionString.indexOf('.');
@@ -172,36 +172,30 @@ public class WindowsTaskScheduler extends AbstractTaskScheduler
       ProcessResult res=ProcessTool.execute(bld.toString().split(" ")); //$NON-NLS-1$
       if(res.result!=0)
       {
-        return toString(res);
+        throw new TaskSchedulerException(toString(res));
       }
-      return null;
     }
     catch(IOException ex)
     {
-      return ex.getMessage();
+      throw new TaskSchedulerException(ex.getMessage(),ex);
     }
   }
 
   @Override
-  public String deleteTask(String name)
+  public void deleteTask(String name) throws TaskSchedulerException
   {
-    String check=checkAvailability();
-    if(check!=null)
-    {
-      return check;
-    }
+    checkAvailability();
     try
     {
       ProcessResult res=ProcessTool.execute("schtasks","/delete","/TN","\""+name+"\"","/F"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-      if(res.result==0 || res.result==1)
+      if(res.result!=0 && res.result!=1)
       {
-        return null;
+        throw new TaskSchedulerException(toString(res));
       }
-      return toString(res);
     }
     catch(IOException ex)
     {
-      return ex.getMessage();
+      throw new TaskSchedulerException(ex.getMessage(),ex);
     }
   }
 
@@ -240,13 +234,10 @@ public class WindowsTaskScheduler extends AbstractTaskScheduler
   }
   
   @Override
-  public List<TaskSummary> listTasks()
+  public List<TaskSummary> listTasks() throws TaskSchedulerException
   {
     List<TaskSummary> ans=new ArrayList<TaskSummary>();
-    if(checkAvailability()!=null)
-    {
-      return ans;
-    }
+    checkAvailability();
     
     try
     {
@@ -297,19 +288,19 @@ public class WindowsTaskScheduler extends AbstractTaskScheduler
       }
       else
       {
-        System.err.println(toString(res));
+        LOGGER.warning(toString(res));
       }
     }
     catch(IOException ex)
     {
-      ex.printStackTrace();
+      LOGGER.log(Level.WARNING,ex.getLocalizedMessage(),ex);
     }
     
     return ans;
   }
   
   @Override
-  public String checkAvailability()
+  public void checkAvailability() throws TaskSchedulerException
   {
     synchronized(_lock)
     {
@@ -342,7 +333,7 @@ public class WindowsTaskScheduler extends AbstractTaskScheduler
           _unavailable=Messages.getString("WindowsTaskScheduler.StatusError",ex.getMessage()); //$NON-NLS-1$
         }
       }
-      return _unavailable;
+      if(_unavailable!=null) throw new TaskSchedulerException(_unavailable);
     }
   }
   

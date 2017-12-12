@@ -16,7 +16,7 @@
 package be.acrosoft.gaia.shared.scheduler;
 
 /**
- * TaskSummary.
+ * An individual task summary.
  */
 public class TaskSummary
 {

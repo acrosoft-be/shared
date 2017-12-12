@@ -23,6 +23,7 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import be.acrosoft.gaia.shared.util.GaiaConstants;
 import be.acrosoft.gaia.shared.util.OSSpecific;
@@ -35,6 +36,8 @@ import be.acrosoft.gaia.shared.util.ProcessTool.ProcessResult;
 @OSSpecific({GaiaConstants.OS_NAME_WINDOWS,GaiaConstants.OS_NAME_MACOSX})
 public class CronTaskScheduler extends AbstractTaskScheduler
 {
+  private static final Logger LOGGER=Logger.getLogger(CronTaskScheduler.class.getName());
+  
   static interface CronTab
   {
     public void cleanup();
@@ -102,7 +105,7 @@ public class CronTaskScheduler extends AbstractTaskScheduler
       }
       else
       {
-        System.err.println(readResult);
+        LOGGER.warning(readResult);
       }
     }
     
@@ -257,14 +260,11 @@ public class CronTaskScheduler extends AbstractTaskScheduler
   }
   
   @Override
-  public String createTask(Task task)
+  public void createTask(Task task) throws TaskSchedulerException
   {
     List<String> existingTab=new ArrayList<String>();
     String error=_tab.read(existingTab);
-    if(error!=null)
-    {
-      return error;
-    }
+    if(error!=null) throw new TaskSchedulerException(error);
     
     String command=String.format("%1$s %2$s%3$s%4$s%5$s",task.getCommand(),task.getParameters(),PREFIX,task.getName(),POSTFIX); //$NON-NLS-1$
     String toAdd=null;
@@ -320,19 +320,17 @@ public class CronTaskScheduler extends AbstractTaskScheduler
     {
       existingTab.add(toAdd);
     }
-    return _tab.apply(existingTab);
+    error=_tab.apply(existingTab);
+    if(error!=null) throw new TaskSchedulerException(error);
   }
 
   @Override
-  public String deleteTask(String name)
+  public void deleteTask(String name) throws TaskSchedulerException
   {
     List<String> newTab=new ArrayList<String>();
     List<String> existingTab=new ArrayList<String>();
     String error=_tab.read(existingTab);
-    if(error!=null)
-    {
-      return error;
-    }
+    if(error!=null) throw new TaskSchedulerException(error);
     for(String line:existingTab)
     {
       String cmd=getCommand(line);
@@ -356,18 +354,18 @@ public class CronTaskScheduler extends AbstractTaskScheduler
       newTab.add(line);
     }
     error=_tab.apply(newTab);
-    return error;
+    if(error!=null) throw new TaskSchedulerException(error);
   }
 
   @Override
-  public List<TaskSummary> listTasks()
+  public List<TaskSummary> listTasks() throws TaskSchedulerException
   {
     List<String> tab=new ArrayList<String>();
     List<TaskSummary> ans=new ArrayList<TaskSummary>();
     String error=_tab.read(tab);
     if(error!=null)
     {
-      System.err.println(error);
+      LOGGER.warning(error);
       return ans;
     }
     
@@ -403,9 +401,8 @@ public class CronTaskScheduler extends AbstractTaskScheduler
   }  
   
   @Override
-  public String checkAvailability()
+  public void checkAvailability() throws TaskSchedulerException
   {
-    return null;
   }
 
 }

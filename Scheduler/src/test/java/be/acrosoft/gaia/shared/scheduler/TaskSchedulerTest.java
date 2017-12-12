@@ -16,8 +16,6 @@
 package be.acrosoft.gaia.shared.scheduler;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -65,16 +63,29 @@ public class TaskSchedulerTest
     delete(Paths.get("crontab.saved"));
   }
 
-  private void testSchedule(Schedule schedule)
+  private boolean available()
+  {
+    try
+    {
+      TaskSchedulerRegistry.getTaskScheduler().checkAvailability();
+      return true;
+    }
+    catch(TaskSchedulerException ex)
+    {
+      return false;
+    }
+  }
+  
+  private void testSchedule(Schedule schedule) throws TaskSchedulerException
   {
     TaskScheduler sch=TaskSchedulerRegistry.getTaskScheduler();
-    if(sch.checkAvailability()!=null) return;
+    if(!available()) return;
     
     String name=UUID.randomUUID().toString();
     
     Task task=new Task(name,schedule,"nothing","param");
     
-    assertNull(sch.createTask(task));
+    sch.createTask(task);
     try
     {
       boolean found=false;
@@ -92,7 +103,7 @@ public class TaskSchedulerTest
     }
     finally
     {
-      assertNull(sch.deleteTask(name));
+      sch.deleteTask(name);
     }
     
     List<TaskSummary> tasks = sch.listTasks();
@@ -106,7 +117,7 @@ public class TaskSchedulerTest
   }
   
   @Test
-  public void testSchedule()
+  public void testSchedule() throws TaskSchedulerException
   {
     testSchedule(new Schedule(12*60));
     for(int d=0;d<=6;d++)
@@ -121,10 +132,17 @@ public class TaskSchedulerTest
   {
     if(!Platform.isWindows()) return;
     TaskScheduler sch=TaskSchedulerRegistry.getTaskScheduler();
-    if(sch.checkAvailability()!=null) return;
+    if(!available()) return;
     String name=UUID.randomUUID().toString();
     Task task=new Task(name,new Schedule(-60),"nothing","param");
-    assertNotNull(sch.createTask(task));
+    try
+    {
+      sch.createTask(task);
+      fail("Unexpected success");
+    }
+    catch(TaskSchedulerException ex)
+    {
+    }
   }
 
   @Test
@@ -132,10 +150,17 @@ public class TaskSchedulerTest
   {
     if(!Platform.isWindows()) return;
     TaskScheduler sch=TaskSchedulerRegistry.getTaskScheduler();
-    if(sch.checkAvailability()!=null) return;
+    if(!available()) return;
     String name=UUID.randomUUID().toString();
     Task task=new Task(name,new Schedule(-1,60),"nothing","param");
-    assertNotNull(sch.createTask(task));
+    try
+    {
+      sch.createTask(task);
+      fail("Unexpected success");
+    }
+    catch(TaskSchedulerException ex)
+    {
+    }
   }
 
   @Test
@@ -143,18 +168,25 @@ public class TaskSchedulerTest
   {
     if(!Platform.isWindows()) return;
     TaskScheduler sch=TaskSchedulerRegistry.getTaskScheduler();
-    if(sch.checkAvailability()!=null) return;
+    if(!available()) return;
     String name=UUID.randomUUID().toString();
     Task task=new Task(name,new Schedule(10,20,2),"nothing","param");
-    assertNotNull(sch.createTask(task));
+    try
+    {
+      sch.createTask(task);
+      fail("Unexpected success");
+    }
+    catch(TaskSchedulerException ex)
+    {
+    }
   }
   
   @Test
-  public void deleteWrongTask()
+  public void deleteWrongTask() throws TaskSchedulerException
   {
     TaskScheduler sch=TaskSchedulerRegistry.getTaskScheduler();
-    if(sch.checkAvailability()!=null) return;
+    if(!available()) return;
     String name=UUID.randomUUID().toString();
-    assertNull(sch.deleteTask(name));
+    sch.deleteTask(name);
   }
 }
