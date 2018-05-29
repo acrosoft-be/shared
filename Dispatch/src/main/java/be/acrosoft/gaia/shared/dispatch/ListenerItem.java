@@ -39,13 +39,25 @@ class ListenerItem<T extends Listener>
 
   private boolean _removed;
   
+  private static boolean isWeak(Class<?> clazz)
+  {
+    if(clazz==null || clazz.isPrimitive()) return false;
+    if(clazz.isAnnotationPresent(WeakListener.class)) return true;
+    if(isWeak(clazz.getSuperclass())) return true;
+    for(Class<?> i:clazz.getInterfaces())
+    {
+      if(isWeak(i)) return true;
+    }
+    return false;
+  }
+  
   /**
    * Create a new ListenerItem.
    * @param alistener listener.
    */
   public ListenerItem(T alistener)
   {
-    if(alistener.getClass().isAnnotationPresent(WeakListener.class))
+    if(isWeak(alistener.getClass()))
     {
       weakListener=new WeakReference<T>(alistener);
     }

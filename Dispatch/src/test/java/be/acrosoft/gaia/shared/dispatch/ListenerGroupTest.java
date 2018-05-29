@@ -163,11 +163,23 @@ public class ListenerGroupTest
   }
   
   @WeakListener
-  private static class MyWeakListener extends MyStrongListener
+  private static interface MyWeakListenerInterface extends Listener<MyWeakListenerInterface>
   {
+    public void my();
+  }
+  
+  private static class MyWeakListener implements MyWeakListenerInterface
+  {
+    private List<Integer> _l;
     public MyWeakListener(List<Integer> l)
     {
-      super(l);
+      _l=l;
+    }
+    
+    @Override
+    public void my()
+    {
+      _l.add(0);
     }
   }
   
@@ -178,17 +190,17 @@ public class ListenerGroupTest
     QueuingInvoker invoker=new QueuingInvoker();
     Dispatcher.init(invoker);
 
-    MyListenerInterface group=Listener.groupOf(MyListenerInterface.class);
+    MyWeakListenerInterface group=Listener.groupOf(MyWeakListenerInterface.class);
     
-    MyListenerInterface listener=new MyWeakListener(list);
-    WeakReference<MyListenerInterface> weak=new WeakReference<>(listener);
+    MyWeakListenerInterface listener=new MyWeakListener(list);
+    WeakReference<MyWeakListenerInterface> weak=new WeakReference<>(listener);
     
     group.add(listener);
     listener=null;
     
     while(weak.get()!=null) System.gc();
     
-    group.my(null);
+    group.my();
     invoker.flush();
     assertEquals(0,list.size());
   }
