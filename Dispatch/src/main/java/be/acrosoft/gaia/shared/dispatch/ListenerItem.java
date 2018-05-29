@@ -45,7 +45,7 @@ class ListenerItem<T extends Listener>
    */
   public ListenerItem(T alistener)
   {
-    if(alistener.getClass().getAnnotation(WeakListener.class)!=null)
+    if(alistener.getClass().isAnnotationPresent(WeakListener.class))
     {
       weakListener=new WeakReference<T>(alistener);
     }

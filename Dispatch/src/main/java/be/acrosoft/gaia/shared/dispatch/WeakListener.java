@@ -21,7 +21,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * WeakListener.
+ * This annotation is used on {@link Listener} implementations to indicate that instances of these
+ * listeners should be stored as {@link java.lang.ref.WeakReference} as much as possible, allowing for
+ * their collection even though they are registered as listeners in listener groups.
+ * @see Listener
+ * @see java.lang.ref.WeakReference
  */
 @Target({ElementType.TYPE})
 @Retention(value=RetentionPolicy.RUNTIME)

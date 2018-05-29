@@ -85,12 +85,13 @@ import be.acrosoft.gaia.shared.util.Debug;
  * <p/>
  * How does it work?
  * <p/>
- * The {@link Listener#groupOf(Class)} method creates a #Proxy instance which contains the actual implementation for all
+ * The {@link Listener#groupOf(Class)} method creates a {@link java.lang.reflect.Proxy} instance which contains the actual implementation for all
  * the group's methods. If the invoked method is one of the default methods of the Listener interface (add/remove...), then the specific
  * behavior is executed. For any other method, then the call is forwarded to all the listeners that are in the group at the time
  * of invocation. As a consequence, the interface default method's implementation is never really invoked.
  * <p/>
  * @param <T> actual listener type.
+ * @see WeakListener
  */
 public interface Listener<T extends Listener>
 {

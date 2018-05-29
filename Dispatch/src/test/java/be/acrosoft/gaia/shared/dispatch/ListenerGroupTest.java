@@ -18,6 +18,10 @@ package be.acrosoft.gaia.shared.dispatch;
 
 import static org.junit.Assert.assertEquals;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
 
 class MyEvent
@@ -118,5 +122,74 @@ public class ListenerGroupTest
     group.my(new MyEvent("param"));
     invoker.flush();
     assertEquals(2,listener.count);
+  }
+  
+  private static class MyStrongListener implements MyListenerInterface
+  {
+    private List<Integer> _l;
+    
+    public MyStrongListener(List<Integer> l)
+    {
+      _l=l;
+    }
+
+    @Override
+    public void my(MyEvent event)
+    {
+      _l.add(0);
+    }
+    
+  }
+  
+  @Test
+  public void testStrong()
+  {
+    List<Integer> list=new ArrayList<Integer>();
+    QueuingInvoker invoker=new QueuingInvoker();
+    Dispatcher.init(invoker);
+
+    MyListenerInterface group=Listener.groupOf(MyListenerInterface.class);
+    
+    MyListenerInterface listener=new MyStrongListener(list);
+    
+    group.add(listener);
+    listener=null;
+    
+    for(int i=0;i<100;i++) System.gc();
+    
+    group.my(null);
+    invoker.flush();
+    assertEquals(1,list.size());
+  }
+  
+  @WeakListener
+  private static class MyWeakListener extends MyStrongListener
+  {
+    public MyWeakListener(List<Integer> l)
+    {
+      super(l);
+    }
+  }
+  
+  @Test
+  public void testWeak()
+  {
+    List<Integer> list=new ArrayList<Integer>();
+    QueuingInvoker invoker=new QueuingInvoker();
+    Dispatcher.init(invoker);
+
+    MyListenerInterface group=Listener.groupOf(MyListenerInterface.class);
+    
+    MyListenerInterface listener=new MyWeakListener(list);
+    WeakReference<MyListenerInterface> weak=new WeakReference<>(listener);
+    
+    group.add(listener);
+    listener=null;
+    
+    while(weak.get()!=null) System.gc();
+    
+    group.my(null);
+    invoker.flush();
+    assertEquals(0,list.size());
   }
 }
