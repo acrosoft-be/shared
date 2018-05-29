@@ -15,6 +15,8 @@
  */
 package be.acrosoft.gaia.shared.dispatch;
 
+import java.util.concurrent.Executor;
+
 /**
  * This interface provides services needed for asynchronous method invocation. There is an assumption
  * that the invocation will take place from within a (single) background thread.<br>
@@ -25,8 +27,14 @@ package be.acrosoft.gaia.shared.dispatch;
  * Exceptions thrown during invocations are expected to be handled by the AsyncInvoker in an
  * implementation-dependent manner.
  */
-public interface AsyncInvoker
+public interface AsyncInvoker extends Executor
 {
+  @Override
+  default public void execute(Runnable command)
+  {
+    dispatch(command);
+  }
+  
   /**
    * Dispatch the given runnable object into the dispatch thread as soon as possible and return immediately,
    * typically before the runnable has been executed. Any exception thrown by the runnable's run method
