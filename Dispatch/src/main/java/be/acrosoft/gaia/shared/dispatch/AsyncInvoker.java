@@ -17,29 +17,23 @@ package be.acrosoft.gaia.shared.dispatch;
 
 /**
  * This interface provides services needed for asynchronous method invocation. There is an assumption
- * that the invocation will take place from within a background thread.<br/>
+ * that the invocation will take place from within a (single) background thread.<br>
  * Methods are full thread-safe and can be called directly from within the background thread if
- * needed (that is, the methods are reentrant).<br/>
+ * needed (that is, the methods are reentrant).<br>
  * Invocations will take place in FIFO as much as possible. Some methods will inherently cause this
- * FIFO property to break if called from the background thread.
+ * FIFO property to break if called from the background thread.<br>
+ * Exceptions thrown during invocations are expected to be handled by the AsyncInvoker in an
+ * implementation-dependent manner.
  */
 public interface AsyncInvoker
 {
   /**
    * Dispatch the given runnable object into the dispatch thread as soon as possible and return immediately,
-   * typically before the runnable has been executed.
+   * typically before the runnable has been executed. Any exception thrown by the runnable's run method
+   * will be handled in an implementation-dependent manner.
    * @param run runnable to dispatch.
    */
   public void dispatch(Runnable run);
-  
-  /**
-   * Execute the given runnable object into the dispatch thread as soon as possible, and return when it is done.
-   * This method is therefore blocking.<br/>
-   * Using this method from the background thread is allowed, but not advised as this will cause FIFO to be
-   * temporarily violated.
-   * @param run runnable to call.
-   */
-  public void call(Runnable run);
   
   /**
    * Return whether the calling thread is the dispatch thread.

@@ -18,6 +18,8 @@ package be.acrosoft.gaia.shared.dispatch;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Scheduling management class. This class manages a set of scheduled items. A scheduled item is a Runnable instance
@@ -27,6 +29,7 @@ import java.util.TreeMap;
  */
 public class Scheduler
 {
+  private static final Logger LOGGER=Logger.getLogger(Scheduler.class.getName());
 
   private static class ScheduledItemInternal implements Runnable
   {
@@ -219,7 +222,7 @@ public class Scheduler
         {
           try
           {
-            //It is possible that next is not withing _items anymore.
+            //It is possible that next is not within _items anymore.
             synchronized(_items)
             {
               List<ScheduledItemInternal> atTime=_items.get(next.time);
@@ -236,7 +239,7 @@ public class Scheduler
           }
           catch(Throwable ex)
           {
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE,"Unexpected exception in Scheduler",ex); //$NON-NLS-1$
             Dispatcher.reportException(ex);
           }
         }

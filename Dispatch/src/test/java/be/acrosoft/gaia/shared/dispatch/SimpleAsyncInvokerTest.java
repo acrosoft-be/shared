@@ -17,6 +17,9 @@ package be.acrosoft.gaia.shared.dispatch;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
 
 import be.acrosoft.gaia.shared.util.Pair;
@@ -24,60 +27,6 @@ import be.acrosoft.gaia.shared.util.Pair;
 @SuppressWarnings({"javadoc"})
 public class SimpleAsyncInvokerTest
 {
-  @Test
-  public void testCallFromOutside()
-  {
-    Pair<Integer,Integer> p=Pair.pair(0,0);
-    SimpleAsyncInvoker invoker=new SimpleAsyncInvoker();
-    try
-    {
-      invoker.call(()->p.a=17);
-      assertEquals(17,(int)p.a);
-    }
-    finally
-    {
-      invoker.dispose();
-    }
-  }
-  
-  @Test
-  public void testCallReentrant()
-  {
-    Pair<Integer,Integer> p=Pair.pair(0,0);
-    SimpleAsyncInvoker invoker=new SimpleAsyncInvoker();
-    try
-    {
-      invoker.call(()->
-      {
-        invoker.call(()->p.a=17);
-      });
-      assertEquals(17,(int)p.a);
-    }
-    finally
-    {
-      invoker.dispose();
-    }
-  }
-  
-  @Test
-  public void testError()
-  {
-    Pair<Throwable,Integer> p=Pair.pair(null,null);
-    RuntimeException re=new RuntimeException();
-    SimpleAsyncInvoker invoker=new SimpleAsyncInvoker(t->p.a=t);
-    try
-    {
-      invoker.call(()->
-      {
-        throw re;
-      });
-      assertEquals(re,p.a);
-    }
-    finally
-    {
-      invoker.dispose();
-    }
-  }
   
   private void sleep(int time)
   {
@@ -126,4 +75,15 @@ public class SimpleAsyncInvokerTest
     }
   }
   
+  @Test
+  public void testExceptionConsumer()
+  {
+    List<Throwable> list=new ArrayList<>();
+    SimpleAsyncInvoker invoker=new SimpleAsyncInvoker(list::add);
+    invoker.dispatch(()->{throw new RuntimeException("test");}); //$NON-NLS-1$
+    invoker.flush();
+    invoker.dispose();
+    assertEquals(1,list.size());
+    assertEquals("test",list.get(0).getMessage()); //$NON-NLS-1$
+  }
 }

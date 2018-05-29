@@ -18,6 +18,8 @@ package be.acrosoft.gaia.shared.dispatch;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import be.acrosoft.gaia.shared.util.GaiaRuntimeException;
 
@@ -27,16 +29,14 @@ import be.acrosoft.gaia.shared.util.GaiaRuntimeException;
  */
 public class SimpleAsyncInvoker implements AsyncInvoker
 {
+  private static final Logger LOGGER=Logger.getLogger(SimpleAsyncInvoker.class.getName());
+
   private static class InvokeItem
   {
     /**
      * Runnable.
      */
     public Runnable runnable;
-    /**
-     * Is done.
-     */
-    public boolean done;
     /**
      * Lock.
      */
@@ -49,7 +49,6 @@ public class SimpleAsyncInvoker implements AsyncInvoker
     public InvokeItem(Runnable arunnable)
     {
       runnable=arunnable;
-      done=false;
       lock=new Object();
     }
   }
@@ -142,7 +141,14 @@ public class SimpleAsyncInvoker implements AsyncInvoker
         catch(InterruptedException ex)
         {
           //Not quite sure it is a good idea to let this thread die here...
-          _errorConsumer.accept(ex);
+          try
+          {
+            _errorConsumer.accept(ex);
+          }
+          catch(Throwable th)
+          {
+            LOGGER.log(Level.SEVERE,"Throwable thrown from within the error consumer",th); //$NON-NLS-1$
+          }
         }
       }
       if(item==null) return false;
@@ -151,7 +157,6 @@ public class SimpleAsyncInvoker implements AsyncInvoker
         item.runnable.run();
         synchronized(item.lock)
         {
-          item.done=true;
           item.lock.notifyAll();
         }
       }
@@ -159,8 +164,14 @@ public class SimpleAsyncInvoker implements AsyncInvoker
       {
         synchronized(item.lock)
         {
-          _errorConsumer.accept(ex);
-          item.done=true;
+          try
+          {
+            _errorConsumer.accept(ex);
+          }
+          catch(Throwable th)
+          {
+            LOGGER.log(Level.SEVERE,"Throwable thrown from within the error consumer",th); //$NON-NLS-1$
+          }
           item.lock.notifyAll();
         }
       }
@@ -180,11 +191,11 @@ public class SimpleAsyncInvoker implements AsyncInvoker
   
   /**
    * Create a new SimpleAsyncInvoker. Exceptions thrown from a runnable will be ignored and simply
-   * dumped on the console.
+   * logged as warnings.
    */
   public SimpleAsyncInvoker()
   {
-    this(t->t.printStackTrace());
+    this(t->LOGGER.log(Level.WARNING,"Uncaught exception in SimpleAsyncInvoker",t)); //$NON-NLS-1$
   }
   
   /**
@@ -201,44 +212,9 @@ public class SimpleAsyncInvoker implements AsyncInvoker
   private InvokeThread _thread;
   
   @Override
-  public void dispatch(Runnable arg0)
+  public void dispatch(Runnable run)
   {
-    _thread.add(new InvokeItem(arg0));
-  }
-
-  @Override
-  public void call(Runnable arg0)
-  {
-    InvokeItem item=new InvokeItem(arg0);
-    _thread.add(item);
-    
-    if(isDispatchThread())
-    {
-      boolean done=false;
-      while(!done)
-      {
-        yield(true);
-        synchronized(item.lock)
-        {
-          done=item.done;
-        }
-      }
-    }
-    
-    synchronized(item.lock)
-    {
-      while(!item.done)
-      {
-        try
-        {
-          item.lock.wait();
-        }
-        catch(InterruptedException ex)
-        {
-          throw new GaiaRuntimeException(ex);
-        }
-      }
-    }
+    _thread.add(new InvokeItem(run));
   }
 
   @Override
@@ -275,9 +251,6 @@ public class SimpleAsyncInvoker implements AsyncInvoker
     while(_thread.getSize()>0) yield(true);
   }
   
-  /**
-   * Dispose the invoker.
-   */
   @Override
   public void dispose()
   {
@@ -286,6 +259,7 @@ public class SimpleAsyncInvoker implements AsyncInvoker
     try
     {
       _thread.join(1000);
+      if(_thread.isAlive()) LOGGER.warning("SimplerAsyncInvoker thread still alive after timeout");  //$NON-NLS-1$
     }
     catch(InterruptedException ex)
     {

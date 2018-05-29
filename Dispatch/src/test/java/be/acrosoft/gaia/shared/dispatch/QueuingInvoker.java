@@ -36,13 +36,6 @@ public class QueuingInvoker implements AsyncInvoker
   }
   
   @Override
-  public void call(Runnable run)
-  {
-    dispatch(run);
-    flush();
-  }
-
-  @Override
   public synchronized void dispatch(Runnable run)
   {
     if(_sink) return;

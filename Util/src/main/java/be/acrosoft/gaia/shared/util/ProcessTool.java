@@ -25,12 +25,16 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * ProcessTool.
  */
 public class ProcessTool
 {
+  private static final Logger LOGGER=Logger.getLogger(ProcessTool.class.getName());
+
   /**
    * PipeReader.
    */
@@ -67,7 +71,7 @@ public class ProcessTool
       }
       catch(IOException ex)
       {
-        ex.printStackTrace();
+        LOGGER.log(Level.WARNING,"Error reading from pipe",ex); //$NON-NLS-1$
       }
     }
     

@@ -34,6 +34,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.KeyManager;
@@ -47,6 +49,8 @@ import javax.net.ssl.X509TrustManager;
  */
 public class LetsEncryptTools
 {
+  private static final Logger LOGGER=Logger.getLogger(LetsEncryptTools.class.getName());
+
   static String pathToPem="be/acrosoft/gaia/shared/util/letsencrypt.pem"; //$NON-NLS-1$
   
   private static class LETrustManager implements X509TrustManager
@@ -150,7 +154,7 @@ public class LetsEncryptTools
     catch(GeneralSecurityException ex)
     {
       //Too bad, ignore...
-      ex.printStackTrace();
+      LOGGER.log(Level.WARNING,"Failed to open "+url,ex); //$NON-NLS-1$
       return connection;
     }
   }

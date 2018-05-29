@@ -18,6 +18,8 @@ package be.acrosoft.gaia.shared.dispatch;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,6 +64,18 @@ public class DispatcherTest
     Dispatcher.reportException(e);
     while(_exception.a==null) Dispatcher.yield(false);
     assertEquals(e,_exception.a.getCause());
+  }
+  
+  @Test
+  public void testTransparentCall()
+  {
+    assertEquals("hello",Dispatcher.call(()->"hello")); //$NON-NLS-1$ //$NON-NLS-2$
+  }
+  
+  @Test(expected=IOException.class)
+  public void testTransparentException() throws IOException
+  {
+    Dispatcher.call(()->{throw new IOException();});
   }
   
   private void sleep(int time)

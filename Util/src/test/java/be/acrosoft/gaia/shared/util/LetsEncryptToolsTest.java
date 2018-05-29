@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
 
 import org.junit.Test;
 
@@ -55,9 +57,11 @@ public class LetsEncryptToolsTest
     if(Platform.isWindows())
     {
       String old=LetsEncryptTools.pathToPem;
+      Level previousLevel=LogManager.getLogManager().getLogger("").getLevel();
       try
       {
-        LetsEncryptTools.pathToPem="nowhere";
+        LogManager.getLogManager().getLogger("").setLevel(Level.OFF);
+        LetsEncryptTools.pathToPem="nowhere - this exception is EXPECTED and should not be worried about";
         URL url=new URL("https://www.acrosoft.be/maven/");
         HttpURLConnection conn=(HttpURLConnection)LetsEncryptTools.openConnection(url);
         conn.connect();
@@ -67,6 +71,7 @@ public class LetsEncryptToolsTest
       finally
       {
         LetsEncryptTools.pathToPem=old;
+        LogManager.getLogManager().getLogger("").setLevel(previousLevel);
       }
     }
   }

@@ -15,23 +15,28 @@
  */
 package be.acrosoft.gaia.shared.dispatch;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 /**
  * This class is an helper class that can be used to merge asynchronous operations
  * back to synchronous calls. It emulates a synchronous operation with the following
  * characteristics: it has a result type of R, throws a checked exception of type T,
  * and also throws unchecked exception.
- * <br/>
+ * <br>
  * Typically, a thread will call the getResult method while another thread performs
  * the actual operation. The getResult method blocks until another thread calls
  * setResult, setVoidResult, setThrowable or setRuntimeException, whatever comes first.
- * <br/>
+ * <br>
  * It is similar in principle to {@link java.util.concurrent.Future} except that this
- * class forwards exceptions.
+ * class forwards exceptions. It is still implementing this interface to ensure
+ * maximum compatibility.
  * 
  * @param <R> result type.
  * @param <T> throwable type.
  */
-public class Future<R,T extends Throwable>
+public class Future<R,T extends Throwable> implements java.util.concurrent.Future<R>
 {
   private R _result;
   private T _throwable;
@@ -189,5 +194,57 @@ public class Future<R,T extends Throwable>
     {
       return _finished;
     }
+  }
+
+  @Override
+  public boolean cancel(boolean arg0)
+  {
+    return false;
+  }
+
+  @Override
+  public R get() throws InterruptedException,ExecutionException
+  {
+    try
+    {
+      return getResult();
+    }
+    catch(InterruptedException ie)
+    {
+      throw ie;
+    }
+    catch(Throwable th)
+    {
+      throw new ExecutionException(th);
+    }
+  }
+
+  @Override
+  public R get(long timeout,TimeUnit unit) throws InterruptedException,ExecutionException,TimeoutException
+  {
+    try
+    {
+      return getResult(unit.toMillis(timeout));
+    }
+    catch(InterruptedException ie)
+    {
+      throw ie;
+    }
+    catch(Throwable th)
+    {
+      throw new ExecutionException(th);
+    }
+  }
+
+  @Override
+  public boolean isCancelled()
+  {
+    return false;
+  }
+
+  @Override
+  public boolean isDone()
+  {
+    return isResultAvailable();
   }
 }

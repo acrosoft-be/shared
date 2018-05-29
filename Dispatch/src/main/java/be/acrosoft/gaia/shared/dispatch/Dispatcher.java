@@ -15,6 +15,8 @@
  */
 package be.acrosoft.gaia.shared.dispatch;
 
+import java.util.function.Supplier;
+
 import be.acrosoft.gaia.shared.util.GaiaRuntimeException;
 
 /**
@@ -66,9 +68,27 @@ public class Dispatcher
       return _invoker;
     }
   }
+  
+  /**
+   * Dispatch the given supplier object into the dispatch thread as soon as possible and return immediately. The
+   * supplier's result is returned as a future. Exceptions thrown by the supplier will not be captured by the
+   * future, but will instead be propagated to the invoker.
+   * @param supplier supplier to dispatch.
+   * @return future value for the supplier's result.
+   */
+  public static <R> Future<R,RuntimeException> dispatch(Supplier<R> supplier)
+  {
+    Future<R,RuntimeException> future=new Future<>();
+    dispatch((()->
+    {
+      future.setResult(supplier.get());
+    }));
+    return future;
+  }
     
   /**
    * Dispatch the given runnable object into the dispatch thread as soon as possible and return immediately.
+   * Exceptions thrown by the runnable's run method will be propagated to the invoker.
    * @param run runnable to dispatch.
    */
   public static void dispatch(Runnable run)
@@ -78,13 +98,77 @@ public class Dispatcher
   }
   
   /**
-   * Execute the given runnable object into the dispatch thread as soon as possible, and return when it is done.
-   * @param run runnable to call.
+   * A throwing supplier.
+   * @param <R> supplier's return type.
+   * @param <T> thrown exception.
    */
-  public static void call(Runnable run)
+  public static interface ThrowingSupplier<R,T extends Throwable>
   {
-    if(!isInitialized()) throw new GaiaRuntimeException(GaiaRuntimeException.RootCause.INTERNAL_ERROR);
-    getInvoker().call(run);
+    /**
+     * Get the value.
+     * @return value.
+     * @throws T exception.
+     */
+    public R get() throws T;
+  }
+  
+  /**
+   * A throwing runnable.
+   * @param <T> thrown exception.
+   */
+  public static interface ThrowingRunnable<T extends Throwable>
+  {
+    /**
+     * Run.
+     * @throws T exception.
+     */
+    public void run() throws T;
+  }
+  
+  /**
+   * Execute the given runnable object into the dispatch thread as soon as possible, and return when it is done. If
+   * an exception T is thrown by the runnable, it will be thrown back by this method.
+   * @param run runnable to call.
+   * @throws T exception type.
+   */
+  public static <T extends Throwable> void call(ThrowingRunnable<T> run) throws T
+  {
+    call((ThrowingSupplier<Void,T>)()->{run.run();return null;});
+  }
+  
+  /**
+   * Execute the given supplier into the dispatch thread as soon as possible, and return the supplier's value when
+   * the execution is completed. Any exception T thrown by the supplier will be thrown back by this method.<br>
+   * Practically, this method allows to call another method or lambda within the dispatch thread as if it was
+   * call synchronously from the calling's thread.
+   * @param supplier supplier.
+   * @return supplier's result.
+   * @throws T supplier's exception if thrown.
+   */
+  public static <R,T extends Throwable> R call(ThrowingSupplier<R,T> supplier) throws T
+  {
+    if(isDispatchThread()) return supplier.get();
+    Future<R,T> future=new Future<>();
+    dispatch(()->
+    {
+        try
+        {
+          future.setResult(supplier.get());
+        }
+        catch(Throwable ex)
+        {
+          future.setThrowable((T)ex);
+        }
+    });
+    
+    try
+    {
+      return future.getResult();
+    }
+    catch(InterruptedException ex)
+    {
+      throw new GaiaRuntimeException(ex);
+    }
   }
   
   /**
@@ -98,7 +182,8 @@ public class Dispatcher
   }
   
   /**
-   * Report an exception that cannot be handled and that occurred in another thread.
+   * Report an exception that cannot be handled and that occurred in another thread. It will be propagated to
+   * the invoker.
    * @param ex exception.
    */
   public static void reportException(Throwable ex)
@@ -110,36 +195,18 @@ public class Dispatcher
    * Yield the calling thread without preventing the dispatched objects from being executed.
    * @param block if true, the calling thread can be blocked until the next object gets
    * dispatched.
-   * @return true if some objects were actually dispatched, false otherwise.
+   * @return true if some objects were actually dispatched, false otherwise (or if unknown).
+   * @see AsyncInvoker#yield(boolean)
    */
   public static boolean yield(boolean block)
   {
-    if(!isDispatchThread())
-    {
-      if(!block)
-        Thread.yield();
-      else
-      {
-        try
-        {
-          Thread.sleep(10);
-        }
-        catch(InterruptedException ex)
-        {
-          throw new GaiaRuntimeException(ex);
-        }
-      }
-      return false;
-    }
-    
-    //This should not really happen in practice as isDispatchThread would have returned false in
-    //that case, but you never know, and this is possible in theory because of race conditions...
-    if(!isInitialized()) throw new GaiaRuntimeException(GaiaRuntimeException.RootCause.INTERNAL_ERROR);
+    if(!isInitialized()) return false;
     return getInvoker().yield(block);
   }
   
   /**
    * Wait until all dispatched objects are executed.
+   * @see AsyncInvoker#flush()
    */
   public static void flush()
   {
