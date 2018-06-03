@@ -86,6 +86,10 @@ public class WindowsTaskScheduler extends AbstractTaskScheduler
       bld.append(task.getParameters());
     }
     bld.append("\" "); //$NON-NLS-1$
+    if(version>5)
+    {
+      bld.append("/f "); //$NON-NLS-1$
+    }
     
     switch(task.getSchedule().getType())
     {
