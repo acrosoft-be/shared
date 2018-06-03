@@ -53,6 +53,29 @@ public class WindowsTaskScheduler extends AbstractTaskScheduler
     return pad2(""+mins/60)+":"+pad2(""+mins%60); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
   }
   
+  private boolean isAdmin()
+  {
+    try
+    {
+      ProcessResult res = ProcessTool.execute("whoami","/groups"); //$NON-NLS-1$ //$NON-NLS-2$
+      if(res.result != 0)
+      {
+        LOGGER.log(Level.WARNING,"Failed to check whether current user is admin: "+toString(res)); //$NON-NLS-1$
+        return false;
+      }
+      for(String s:res.output)
+      {
+        if(s.indexOf("S-1-16-12288")>=0) return true; //$NON-NLS-1$
+      }
+      return false;
+    }
+    catch(IOException ex)
+    {
+      LOGGER.log(Level.WARNING,"Failed to check whether current user is admin",ex); //$NON-NLS-1$
+      return false;
+    }
+  }
+  
   @Override
   public void createTask(Task task) throws TaskSchedulerException
   {
@@ -89,6 +112,7 @@ public class WindowsTaskScheduler extends AbstractTaskScheduler
     if(version>5)
     {
       bld.append("/f "); //$NON-NLS-1$
+      if(isAdmin()) bld.append("/RL HIGHEST "); //$NON-NLS-1$
     }
     
     switch(task.getSchedule().getType())
