@@ -51,8 +51,9 @@ public class Timer implements Runnable
   public void enable()
   {
     if(enabled()) return;
-    _expected=System.currentTimeMillis()+_interval;
-    _reference=Scheduler.getInstance().schedule(this,_expected);
+    Scheduler sc=Scheduler.getInstance();
+    _expected=sc.getClock().millis()+_interval;
+    _reference=sc.schedule(this,_expected);
     _enabled=true;
   }
   
@@ -80,6 +81,7 @@ public class Timer implements Runnable
   public void run()
   {
     _runnable.run();
+    Scheduler sc=Scheduler.getInstance();
     if(enabled())
     {
       //Ignore action debt.
@@ -87,8 +89,8 @@ public class Timer implements Runnable
       {
         _expected+=_interval;
       }
-      while(_expected<System.currentTimeMillis());
-      _reference=Scheduler.getInstance().schedule(this,_expected);
+      while(_expected<sc.getClock().millis());
+      _reference=sc.schedule(this,_expected);
     }
   }
 }

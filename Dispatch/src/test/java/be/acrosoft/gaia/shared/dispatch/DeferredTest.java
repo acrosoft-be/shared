@@ -18,7 +18,13 @@ package be.acrosoft.gaia.shared.dispatch;
 
 import static org.junit.Assert.assertEquals;
 
+import java.time.Clock;
+
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+
+import be.acrosoft.gaia.shared.util.InstantClock;
 
 
 /**
@@ -27,11 +33,26 @@ import org.junit.Test;
 @SuppressWarnings({"javadoc","nls"})
 public class DeferredTest
 {
+  private InstantClock _clock;
+
   private static class Container
   {
     public int content;
   }
   
+  @Before
+  public void before()
+  {
+    _clock=new InstantClock();
+    Scheduler.getInstance().setClock(_clock);
+  }
+  
+  @After
+  public void after()
+  {
+    Scheduler.getInstance().setClock(Clock.systemUTC());
+  }
+
   @Test
   public void testMain() throws Exception
   {
@@ -61,16 +82,16 @@ public class DeferredTest
     Dispatcher.flush();
     assertEquals(0,container.content);
     
-    Thread.sleep(100);
+    _clock.sleep(100);
     Dispatcher.flush();
     assertEquals(0,container.content);
     
-    Thread.sleep(500);
+    _clock.sleep(500);
     Dispatcher.flush();
     assertEquals(0,container.content);
     
     container.content=1;
-    Thread.sleep(1000);
+    _clock.sleep(1000);
     Dispatcher.flush();
     assertEquals(2,container.content);
     

@@ -15,6 +15,7 @@
  */
 package be.acrosoft.gaia.shared.dispatch;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
@@ -87,6 +88,7 @@ public class Scheduler
   {
     private TreeMap<Long,List<ScheduledItemInternal>> _items;
     private boolean _waiting;
+    private Clock _clock;
     
     /**
      * Create a new SchedulerThread.
@@ -97,6 +99,7 @@ public class Scheduler
       setDaemon(true);
       _items=new TreeMap<>();
       _waiting=false;
+      _clock=Clock.systemUTC();
     }
     
     private void cancelInternal(ScheduledItem item)
@@ -120,6 +123,24 @@ public class Scheduler
         _items.put(item.internal.time,atTime);
       }
       atTime.add(item.internal);
+    }
+    
+    /**
+     * Set the internal clock.
+     * @param clock clock.
+     */
+    public void setClock(Clock clock)
+    {
+      _clock=clock;
+    }
+    
+    /**
+     * Get the internal clock.
+     * @return clock.
+     */
+    public Clock getClock()
+    {
+      return _clock;
     }
     
     /**
@@ -206,7 +227,7 @@ public class Scheduler
             }
             else
             {
-              long time=System.currentTimeMillis();
+              long time=_clock.millis();
               long toWait=next.time-time;
               if(toWait>0) _items.wait(toWait);
             }
@@ -263,6 +284,24 @@ public class Scheduler
   public static Scheduler getInstance()
   {
     return _instance;
+  }
+  
+  /**
+   * Set the scheduler's clock.
+   * @param clock clock.
+   */
+  public void setClock(Clock clock)
+  {
+    _thread.setClock(clock);
+  }
+  
+  /**
+   * Get the scheduler's clock.
+   * @return clock.
+   */
+  public Clock getClock()
+  {
+    return _thread.getClock();
   }
   
   /**

@@ -44,7 +44,8 @@ public class TimeOut implements Runnable
   public void enable()
   {
     if(enabled()) return;
-    _reference=Scheduler.getInstance().schedule(this,System.currentTimeMillis()+_delay);
+    Scheduler sc=Scheduler.getInstance();
+    _reference=sc.schedule(this,sc.getClock().millis()+_delay);
     _enabled=true;
   }
   
@@ -74,9 +75,14 @@ public class TimeOut implements Runnable
   public void reset()
   {
     if(!enabled())
+    {
       enable();
+    }
     else
-      Scheduler.getInstance().reschedule(_reference,System.currentTimeMillis()+_delay);
+    {
+      Scheduler sc=Scheduler.getInstance();
+      sc.reschedule(_reference,sc.getClock().millis()+_delay);
+    }
   }
 
   @Override

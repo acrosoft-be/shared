@@ -34,7 +34,7 @@ public class ExpectedRunnable implements Runnable
   {
     try
     {
-      long current=System.currentTimeMillis();
+      long current=Scheduler.getInstance().getClock().millis();
       assertTrue(""+current+">="+_expectedTime,current>=_expectedTime);
       assertTrue(""+current+"<"+(_expectedTime+100),current<_expectedTime+100);
       _map.setVoidResult();
