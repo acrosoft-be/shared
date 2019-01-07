@@ -235,7 +235,6 @@ public class Partition<T,C> implements Iterable<Partition<T,C>.Element>
     };
   }
   
-  @SuppressWarnings("unchecked")
   private T[] toArray(List<T> list,T[] array)
   {
     Object ans=Array.newInstance(array.getClass().getComponentType(),list.size());

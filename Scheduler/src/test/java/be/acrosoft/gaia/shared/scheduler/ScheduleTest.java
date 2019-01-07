@@ -23,6 +23,7 @@ import org.junit.Test;
 @SuppressWarnings("javadoc")
 public class ScheduleTest
 {
+  @SuppressWarnings("unlikely-arg-type")
   @Test
   public void testEveryday()
   {
