@@ -18,6 +18,7 @@ package be.acrosoft.gaia.shared.dispatch;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -157,7 +158,7 @@ public class Scheduler
         scheduleInternal(item);
         if(_waiting)
         {
-          interrupt();
+          _items.notify();
         }
         return item;
       }
@@ -175,7 +176,7 @@ public class Scheduler
         cancelInternal(item);
         if(_waiting)
         {
-          interrupt();
+          _items.notify();
         }
       }
     }
@@ -196,7 +197,7 @@ public class Scheduler
         scheduleInternal(item);
         if(_waiting)
         {
-          interrupt();
+          _items.notify();
         }
       }
     }
@@ -229,7 +230,37 @@ public class Scheduler
             {
               long time=_clock.millis();
               long toWait=next.time-time;
+              if(toWait>1000) toWait=1000;
               if(toWait>0) _items.wait(toWait);
+              long newTime=_clock.millis();
+              if(newTime<time || newTime>time+10000)
+              {
+                long offset=newTime-time-1000;
+                if(offset<0)
+                {
+                  LOGGER.warning("Clock jumped backwards by "+(-offset)+"ms."); //$NON-NLS-1$ //$NON-NLS-2$
+                }
+                else
+                {
+                  LOGGER.info("Clock jumped forward by "+offset+"ms."); //$NON-NLS-1$ //$NON-NLS-2$
+                }
+                TreeMap<Long,List<ScheduledItemInternal>> shifted=new TreeMap<>();
+                for(Map.Entry<Long,List<ScheduledItemInternal>> entry:_items.entrySet())
+                {
+                  List<ScheduledItemInternal> list=new ArrayList<>();
+                  for(ScheduledItemInternal i:entry.getValue())
+                  {
+                    list.add(new ScheduledItemInternal(i.runnable,i.time+offset));
+                  }
+                  shifted.put(entry.getKey()+offset,list);
+                }
+                _items=shifted;
+                continue;
+              }
+              if(next.time>newTime)
+              {
+                next=null;
+              }
             }
           }
           catch(InterruptedException ex)

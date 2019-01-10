@@ -19,7 +19,12 @@ package be.acrosoft.gaia.shared.dispatch;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.time.Clock;
+import java.time.Duration;
+
 import org.junit.Test;
+
+import be.acrosoft.gaia.shared.util.OffsetClock;
 
 @SuppressWarnings({"javadoc","nls"})
 public class TimerTest
@@ -104,5 +109,30 @@ public class TimerTest
     Thread.sleep(1000);
     assertTrue(""+run.count+">=9",run.count>=9);
     assertTrue(""+run.count+"<17",run.count<17);
+  }
+  
+  @Test
+  public void testBackwardsClock() throws Throwable
+  {
+    OffsetClock clock=new OffsetClock(Clock.systemUTC(),Duration.ZERO);
+    SimpleAsyncInvoker invoker=new SimpleAsyncInvoker();
+    Dispatcher.init(invoker);
+    Scheduler.getInstance().setClock(clock);
+    try {
+      MyRunnable run=new MyRunnable();
+      Timer timer=new Timer(run,50);
+      timer.enable();
+      Thread.sleep(1000);
+      assertTrue(""+run.count+">=18",run.count>=18);
+      assertTrue(""+run.count+"<22",run.count<22);
+      clock.setOffset(Duration.ofHours(-4));
+      run.count=0;
+      Thread.sleep(1000);
+      assertTrue(""+run.count+">=18",run.count>=18);
+      assertTrue(""+run.count+"<22",run.count<22);
+    } finally {
+      Scheduler.getInstance().setClock(Clock.systemUTC());
+    }
+    
   }
 }
