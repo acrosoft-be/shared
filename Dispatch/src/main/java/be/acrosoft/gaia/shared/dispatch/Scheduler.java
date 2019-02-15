@@ -18,7 +18,6 @@ package be.acrosoft.gaia.shared.dispatch;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -88,7 +87,6 @@ public class Scheduler
   private static class SchedulerThread extends Thread
   {
     private TreeMap<Long,List<ScheduledItemInternal>> _items;
-    private boolean _waiting;
     private Clock _clock;
     
     /**
@@ -99,7 +97,6 @@ public class Scheduler
       super("SchedulerThread"); //$NON-NLS-1$
       setDaemon(true);
       _items=new TreeMap<>();
-      _waiting=false;
       _clock=Clock.systemUTC();
     }
     
@@ -156,7 +153,7 @@ public class Scheduler
       {
         ScheduledItem item=new ScheduledItem(new ScheduledItemInternal(runnable,time));
         scheduleInternal(item);
-        if(_waiting)
+        //if(_waiting)
         {
           _items.notify();
         }
@@ -174,7 +171,7 @@ public class Scheduler
       synchronized(_items)
       {
         cancelInternal(item);
-        if(_waiting)
+        //if(_waiting)
         {
           _items.notify();
         }
@@ -195,7 +192,7 @@ public class Scheduler
         cancelInternal(item);
         item.internal=new ScheduledItemInternal(item.internal.runnable,time);
         scheduleInternal(item);
-        if(_waiting)
+        //if(_waiting)
         {
           _items.notify();
         }
@@ -218,7 +215,6 @@ public class Scheduler
         ScheduledItemInternal next=null;
         synchronized(_items)
         {
-          _waiting=true;
           next=getFirst();
           try
           {
@@ -228,35 +224,10 @@ public class Scheduler
             }
             else
             {
-              long time=_clock.millis();
-              long toWait=next.time-time;
+              long toWait=next.time-_clock.millis();
               if(toWait>1000) toWait=1000;
               if(toWait>0) _items.wait(toWait);
               long newTime=_clock.millis();
-              if(newTime<time || newTime>time+10000)
-              {
-                long offset=newTime-time-1000;
-                if(offset<0)
-                {
-                  LOGGER.warning("Clock jumped backwards by "+(-offset)+"ms."); //$NON-NLS-1$ //$NON-NLS-2$
-                }
-                else
-                {
-                  LOGGER.info("Clock jumped forward by "+offset+"ms."); //$NON-NLS-1$ //$NON-NLS-2$
-                }
-                TreeMap<Long,List<ScheduledItemInternal>> shifted=new TreeMap<>();
-                for(Map.Entry<Long,List<ScheduledItemInternal>> entry:_items.entrySet())
-                {
-                  List<ScheduledItemInternal> list=new ArrayList<>();
-                  for(ScheduledItemInternal i:entry.getValue())
-                  {
-                    list.add(new ScheduledItemInternal(i.runnable,i.time+offset));
-                  }
-                  shifted.put(entry.getKey()+offset,list);
-                }
-                _items=shifted;
-                continue;
-              }
               if(next.time>newTime)
               {
                 next=null;
@@ -267,7 +238,6 @@ public class Scheduler
           {
             next=null;
           }
-          _waiting=false;
         }
         
         if(next!=null)

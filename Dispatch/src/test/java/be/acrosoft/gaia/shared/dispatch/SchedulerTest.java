@@ -19,12 +19,7 @@ package be.acrosoft.gaia.shared.dispatch;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import java.time.Clock;
-import java.time.Duration;
-
 import org.junit.Test;
-
-import be.acrosoft.gaia.shared.util.OffsetClock;
 
 /**
  * SchedulerTest.
@@ -80,52 +75,6 @@ public class SchedulerTest
     Thread.sleep(50);
     Scheduler.getInstance().reschedule(ref,atTime+500);
     map.getResult();
-  }
-  
-  @Test
-  public void testClockBackward() throws Throwable
-  {
-    SimpleAsyncInvoker invoker=new SimpleAsyncInvoker();
-    Dispatcher.init(invoker);
-    
-    OffsetClock clock=new OffsetClock(Clock.systemUTC(),Duration.ZERO);
-    Scheduler.getInstance().setClock(clock);
-    try
-    {
-      Future<Void,Throwable> map=new Future<Void,Throwable>();
-      ExpectedRunnable run=new ExpectedRunnable(map,clock.instant().minus(Duration.ofHours(1)).toEpochMilli()+2500);
-      Scheduler.getInstance().schedule(run,clock.millis()+2500);
-      Thread.sleep(10);
-      clock.setOffset(Duration.ofHours(-1));
-      map.getResult();
-    }
-    finally
-    {
-      Scheduler.getInstance().setClock(Clock.systemUTC());
-    }
-  }
-  
-  @Test
-  public void testClockForward() throws Throwable
-  {
-    SimpleAsyncInvoker invoker=new SimpleAsyncInvoker();
-    Dispatcher.init(invoker);
-    
-    OffsetClock clock=new OffsetClock(Clock.systemUTC(),Duration.ZERO);
-    Scheduler.getInstance().setClock(clock);
-    try
-    {
-      Future<Void,Throwable> map=new Future<Void,Throwable>();
-      ExpectedRunnable run=new ExpectedRunnable(map,clock.instant().plus(Duration.ofHours(1)).toEpochMilli()+2500);
-      Scheduler.getInstance().schedule(run,clock.millis()+2500);
-      Thread.sleep(10);
-      clock.setOffset(Duration.ofHours(1));
-      map.getResult();
-    }
-    finally
-    {
-      Scheduler.getInstance().setClock(Clock.systemUTC());
-    }
   }
 
 }
