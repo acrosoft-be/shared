@@ -68,7 +68,7 @@ public class CardReaderRegistry
     try
     {
       Class driverClass=Class.forName("be.acrosoft.gaia.shared.icc.drivers."+driverName+".Driver"); //$NON-NLS-1$ //$NON-NLS-2$
-      CardReaderDriver driver=(CardReaderDriver)driverClass.newInstance();
+      CardReaderDriver driver=(CardReaderDriver)driverClass.getDeclaredConstructor().newInstance();
       driver.register();
       return true;
     }

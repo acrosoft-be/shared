@@ -50,7 +50,6 @@ import be.belgium.eid.objects.SmartCardReadable;
 /**
  * ReaderThread.
  */
-@SuppressWarnings("restriction")
 public class ReaderThread extends Thread implements CardReaderMonitor
 {
   private static final Logger LOGGER=Logger.getLogger(ReaderThread.class.getName());
