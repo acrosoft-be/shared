@@ -61,7 +61,7 @@ public class LetsEncryptToolsTest
       try
       {
         LogManager.getLogManager().getLogger("").setLevel(Level.OFF);
-        LetsEncryptTools.pathToPem="nowhere - this exception is EXPECTED and should not be worried about";
+        LetsEncryptTools.pathToPem="be/acrosoft/gaia/shared/util/invalid.pem";
         URL url=new URL("https://www.acrosoft.be/maven/");
         HttpURLConnection conn=(HttpURLConnection)LetsEncryptTools.openConnection(url);
         conn.connect();

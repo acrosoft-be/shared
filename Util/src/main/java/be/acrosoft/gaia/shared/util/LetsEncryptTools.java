@@ -40,6 +40,7 @@ import java.util.logging.Logger;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -149,13 +150,14 @@ public class LetsEncryptTools
     {
       HttpsURLConnection scon=(HttpsURLConnection)connection;
       scon.setSSLSocketFactory(getSSLSocketFactory());
+      scon.connect();
       return scon;
     }
-    catch(GeneralSecurityException ex)
+    catch(GeneralSecurityException | SSLException ex)
     {
       //Too bad, ignore...
       LOGGER.log(Level.WARNING,"Failed to open "+url,ex); //$NON-NLS-1$
-      return connection;
+      return url.openConnection();
     }
   }
 }
