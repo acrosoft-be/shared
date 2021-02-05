@@ -256,7 +256,7 @@ public class RTFParser
     byte b=(byte)i;
     ByteBuffer buffer=ByteBuffer.allocate(1);
     buffer.put(b);
-    CharBuffer cbuf=_charset.decode((ByteBuffer)buffer.rewind());
+    CharBuffer cbuf=_charset.decode(buffer.rewind());
     String ans=cbuf.toString();
     return ans;
   }
