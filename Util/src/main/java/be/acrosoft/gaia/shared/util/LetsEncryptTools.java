@@ -151,6 +151,10 @@ public class LetsEncryptTools
       HttpsURLConnection scon=(HttpsURLConnection)connection;
       scon.setSSLSocketFactory(getSSLSocketFactory());
       scon.connect();
+      scon.disconnect();
+      
+      scon = (HttpsURLConnection)url.openConnection();
+      scon.setSSLSocketFactory(getSSLSocketFactory());
       return scon;
     }
     catch(GeneralSecurityException | SSLException ex)
