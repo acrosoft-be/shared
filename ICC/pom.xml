@@ -41,10 +41,14 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.3</version>
+				<version>3.5.1</version>
 				<configuration>
-					<source>8</source>
-					<target>8</target>
+					<source>11</source>
+					<target>11</target>
+	                <compilerArgs>
+	                    <arg>--add-modules</arg>
+                        <arg>java.smartcardio</arg>
+	                </compilerArgs>
 				</configuration>
 			</plugin>
 			<plugin>

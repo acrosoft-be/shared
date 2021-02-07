@@ -38,7 +38,8 @@ import be.acrosoft.gaia.shared.rich.TextSection;
  */
 public class DOCXReader implements DocumentReader<InputStream>
 {
-  @Override
+  @SuppressWarnings("deprecation")
+@Override
   public RichDocument read(InputStream is)
   {
     RichDocument ans=new RichDocument();
