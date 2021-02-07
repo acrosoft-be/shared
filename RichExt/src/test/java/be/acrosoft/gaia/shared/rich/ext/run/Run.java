@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package be.acrosoft.gaia.shared.rich.run;
+package be.acrosoft.gaia.shared.rich.ext.run;
 
 import java.io.FileInputStream;
 
@@ -24,8 +24,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import be.acrosoft.gaia.shared.rich.RichDocument;
+import be.acrosoft.gaia.shared.rich.ext.writers.StyledTextWriter;
 import be.acrosoft.gaia.shared.rich.readers.RTFReader;
-import be.acrosoft.gaia.shared.rich.writers.StyledTextWriter;
 
 @SuppressWarnings({"javadoc","nls"})
 public class Run

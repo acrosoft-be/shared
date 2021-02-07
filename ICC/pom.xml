@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>be.acrosoft.gaia</groupId>
 	<artifactId>shared.icc</artifactId>
-	<version>1.0</version>
+	<version>1.1</version>
 	<name>Shared.ICC</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -22,7 +22,7 @@
 		<dependency>
 			<groupId>be.acrosoft.gaia</groupId>
 			<artifactId>shared.dispatch</artifactId>
-			<version>[1.0,)</version>
+			<version>[1.1,)</version>
 		</dependency>
 		<dependency>
 			<groupId>eid</groupId>
@@ -32,7 +32,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>[4.0,)</version>
+			<version>[4.11,)</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -41,14 +41,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.5.1</version>
+				<version>3.8.0</version>
 				<configuration>
 					<source>11</source>
 					<target>11</target>
-	                <compilerArgs>
-	                    <arg>--add-modules</arg>
-                        <arg>java.smartcardio</arg>
-	                </compilerArgs>
 				</configuration>
 			</plugin>
 			<plugin>

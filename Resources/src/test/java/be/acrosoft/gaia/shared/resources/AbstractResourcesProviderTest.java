@@ -131,7 +131,7 @@ public class AbstractResourcesProviderTest
     
     Debug.override(false);
     InputStream a=prov.findImage("NotThere",16);
-    InputStream b=AbstractResourcesProvider.class.getClassLoader().getResourceAsStream("be/acrosoft/gaia/shared/resources/images/error.png");
+    InputStream b=AbstractResourcesProvider.class.getModule().getResourceAsStream("be/acrosoft/gaia/shared/resources/images/error.png");
     assertTrue(compareStreams(a,b));
 
     Debug.override(true);

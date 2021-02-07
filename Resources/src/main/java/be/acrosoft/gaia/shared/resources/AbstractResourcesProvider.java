@@ -182,10 +182,24 @@ public abstract class AbstractResourcesProvider
     }
   }
   
+  private InputStream getResourceAsStream(Class clazz, String name)
+  {
+      InputStream is = clazz.getClassLoader().getResourceAsStream(name);
+      if (is != null) return is;
+      try
+      {
+          return clazz.getModule().getResourceAsStream(name);
+      }
+      catch (IOException ex)
+      {
+          return null;
+      }
+  }   
+  
   private InputStream getImage(String path,String extension)
   {
     String fname=path+"."+extension; //$NON-NLS-1$
-    return getClass().getClassLoader().getResourceAsStream(fname);
+    return getResourceAsStream(getClass(), fname);
   }
   
   private InputStream getDirectImage(String key)
@@ -316,7 +330,7 @@ public abstract class AbstractResourcesProvider
     cl=cl.replace('.','/');
     
     String fnamez=cl+".svgz"; //$NON-NLS-1$
-    InputStream zis=getClass().getClassLoader().getResourceAsStream(fnamez);
+    InputStream zis=getResourceAsStream(getClass(),fnamez);
     if(zis!=null)
     {
       try
@@ -330,6 +344,6 @@ public abstract class AbstractResourcesProvider
     }
     
     String fname=cl+".svg"; //$NON-NLS-1$
-    return getClass().getClassLoader().getResourceAsStream(fname);
+    return getResourceAsStream(getClass(),fname);
   }
 }
