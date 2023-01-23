@@ -35,7 +35,7 @@ public class HostChecker
     if(toTest.length==4 && subNetLength>32)
     {
       //Working around Java bug #6707289
-      if(subNetAddress[0]==4)
+      if(subNetAddress[0]==10)
       {
         subNetLength=8;
       }
@@ -89,7 +89,9 @@ public class HostChecker
       {
         byte[] add=interfaceAddress.getAddress().getAddress();
         short length=interfaceAddress.getNetworkPrefixLength();
-        if(isWithinSubNet(address.getAddress(),add,length)) return true;
+        if (length >= 0) {
+          if (isWithinSubNet(address.getAddress(), add, length)) return true;
+        }
       }
     }
     return false;
