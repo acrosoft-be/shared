@@ -91,7 +91,7 @@ public abstract class AbstractResourcesProvider
       {
         if(_engine==null)
         {
-          _engine=new ScriptEngineManager(getClass().getClassLoader()).getEngineByName("JavaScript"); //$NON-NLS-1$
+          _engine=new ScriptEngineManager(getClass().getClassLoader()).getEngineByName("graal.js"); //$NON-NLS-1$
         }
         
         if(_engine instanceof Compilable)
