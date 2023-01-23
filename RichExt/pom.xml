@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>be.acrosoft.gaia</groupId>
 	<artifactId>shared.richext</artifactId>
-	<version>1.1</version>
+	<version>1.2</version>
 	<name>Shared.RichExt</name>
 	<description>Extension of Shared.Rich</description>
 	<properties>
@@ -12,7 +12,7 @@
 	<repositories>
 		<repository>
 			<id>maven-eclipse-repo</id>
-			<url>http://maven-eclipse.github.io/maven</url>
+			<url>https://github.com/maven-eclipse/maven-eclipse.github.io/raw/master/maven</url>
 		</repository>
 	</repositories>
 	<dependencies>
@@ -62,7 +62,7 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.5</version>
+				<version>0.8.8</version>
 				<executions>
 					<execution>
 						<id>prepare-agent</id>
@@ -93,13 +93,4 @@
 		</plugins>
 
 	</build>
-	<reporting>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>findbugs-maven-plugin</artifactId>
-				<version>3.0.4</version>
-			</plugin>
-		</plugins>
-	</reporting>
 </project>

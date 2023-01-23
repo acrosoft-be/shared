@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>be.acrosoft.gaia</groupId>
 	<artifactId>shared.icc</artifactId>
-	<version>1.1</version>
+	<version>1.2</version>
 	<name>Shared.ICC</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -50,7 +50,7 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.5</version>
+				<version>0.8.8</version>
 				<executions>
 					<execution>
 						<id>prepare-agent</id>
@@ -82,13 +82,6 @@
 
 	</build>
 	<reporting>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>findbugs-maven-plugin</artifactId>
-				<version>3.0.4</version>
-			</plugin>
-		</plugins>
 	</reporting>
 	<description>Belgian ICC support</description>
 </project>
